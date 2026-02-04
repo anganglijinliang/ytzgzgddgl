@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS production_records (
     workshop TEXT,
     warehouse TEXT,
     operator_id TEXT NOT NULL, -- Could be username or user UUID
+    heat_no TEXT, -- 炉号
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

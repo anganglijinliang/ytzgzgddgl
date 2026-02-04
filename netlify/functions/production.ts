@@ -23,6 +23,7 @@ export const handler = async (event, context) => {
           workshop: row.workshop,
           warehouse: row.warehouse,
           operatorId: row.operator_id,
+          heatNo: row.heat_no,
           timestamp: row.timestamp
         }));
 

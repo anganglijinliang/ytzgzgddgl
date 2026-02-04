@@ -63,8 +63,17 @@ CREATE TABLE IF NOT EXISTS production_records (
     workshop TEXT,
     warehouse TEXT,
     operator_id TEXT NOT NULL,
+    heat_no TEXT,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migration for existing tables (Idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='heat_no') THEN
+        ALTER TABLE production_records ADD COLUMN heat_no TEXT;
+    END IF;
+END $$;
 
 -- Shipping Records Table
 CREATE TABLE IF NOT EXISTS shipping_records (

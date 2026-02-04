@@ -14,6 +14,7 @@ export default function Production() {
   const [team, setTeam] = React.useState<string>('甲班');
   const [shift, setShift] = React.useState<string>('白班');
   const [workshop, setWorkshop] = React.useState<string>('一车间');
+  const [heatNo, setHeatNo] = React.useState<string>('');
   
   const canOperate = currentUser?.role === 'admin' || currentUser?.role === 'production';
 
@@ -39,11 +40,13 @@ export default function Production() {
       shift: shift as any,
       quantity: Number(quantity),
       workshop,
+      heatNo,
       operatorId: currentUser?.id || 'unknown'
     });
 
     alert('生产记录已提交');
     setQuantity(0);
+    setHeatNo(''); // Reset heatNo
     // Optional: Reset selection or keep for continuous entry
   };
 
@@ -161,6 +164,16 @@ export default function Production() {
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">炉号 (Heat No)</label>
+                <input
+                  type="text"
+                  value={heatNo}
+                  onChange={(e) => setHeatNo(e.target.value)}
+                  placeholder="请输入炉号..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>

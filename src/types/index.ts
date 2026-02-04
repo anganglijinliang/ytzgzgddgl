@@ -73,6 +73,7 @@ export interface ProductionRecord {
   
   operatorId: string;
   timestamp: string;
+  heatNo?: string; // 炉号
 }
 
 export interface ShippingRecord {
