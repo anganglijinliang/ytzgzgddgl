@@ -11,7 +11,7 @@ import { FileText, Factory, Truck, AlertCircle, Upload, Download, Database } fro
 import React, { useState } from 'react';
 
 export default function Dashboard() {
-  const { orders, productionRecords, shippingRecords, importData, isLoading, error } = useStore();
+  const { orders, productionRecords, shippingRecords, importData, error } = useStore();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [initDbLoading, setInitDbLoading] = useState(false);
 

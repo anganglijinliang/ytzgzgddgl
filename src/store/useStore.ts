@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Order, User, MasterData, ProductionRecord, ShippingRecord, OrderStatus } from '@/types';
+import { Order, User, MasterData, ProductionRecord, ShippingRecord } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AppState {
