@@ -42,19 +42,35 @@ This project is configured for Netlify deployment.
 2. Run `netlify deploy --prod`
 3. Select `dist` as the publish directory.
 
-## 4. Demo Features Usage
+## 4. Database Setup (Neon Postgres)
 
-### Data Sync (Serverless Mode)
-Since this is a client-side demo (using LocalStorage), data is isolated per browser. To sync data between different roles (e.g., Admin -> Production -> Shipping):
+This system uses **Neon Serverless Postgres** for enterprise-grade data persistence.
 
-1. **Login as Admin** (`admin`).
-2. Go to **Dashboard**.
-3. Click **Export Data** to download `angang_backup_xxxx.json`.
-4. Send this file to other users (or open in another browser).
-5. Log in as another user (e.g., `prod`).
-6. Go to **Dashboard** (Admin only feature currently, you may need to temporarily login as admin to import, or we can enable it for all).
-   * *Note: Currently Import/Export is Admin only.*
-7. Click **Import Data** and select the JSON file.
+### Configuration
+1. Create a database in [Neon Console](https://console.neon.tech/).
+2. Get the connection string (Connection Details -> .env).
+3. Set the Environment Variable:
+   - **Local**: Create `.env` file with `DATABASE_URL=postgres://...`
+   - **Netlify**: Site Settings -> Environment variables -> Add `DATABASE_URL`.
+
+### Initialization
+1. Deploy the site or run locally (`netlify dev`).
+2. Login as **Admin**.
+3. Go to **Dashboard**.
+4. Click the **"初始化数据库" (Initialize Database)** button.
+   - This creates all necessary tables (`orders`, `production_records`, `shipping_records`).
+   - *Note: You only need to do this once.*
+
+## 5. Demo Features Usage
+
+### Data Sync (Cloud Mode)
+With the database connected, data sync is **automatic**. 
+- Updates from Production team appear instantly for Sales/Admin.
+- No manual JSON import/export needed (though still available as backup).
+
+### Legacy Mode (Local Storage)
+If the database is not connected, the system falls back to LocalStorage.
+- Use **Export/Import Data** buttons on Dashboard to manually sync.
 
 ### MTC Generation
 1. Go to **Order Tracking** (scan QR code or click from list).

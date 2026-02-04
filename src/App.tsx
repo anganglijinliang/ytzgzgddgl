@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -7,8 +8,16 @@ import Production from './pages/Production';
 import Shipping from './pages/Shipping';
 import Reports from './pages/Reports';
 import TrackOrder from './pages/TrackOrder';
+import { useStore } from './store/useStore';
 
 function App() {
+  const fetchInitialData = useStore(state => state.fetchInitialData);
+
+  useEffect(() => {
+    // Load data when app starts
+    fetchInitialData();
+  }, [fetchInitialData]);
+
   return (
     <BrowserRouter>
       <Routes>

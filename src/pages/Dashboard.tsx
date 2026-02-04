@@ -7,12 +7,32 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { FileText, Factory, Truck, AlertCircle, Upload, Download } from 'lucide-react';
-import React from 'react';
+import { FileText, Factory, Truck, AlertCircle, Upload, Download, Database } from 'lucide-react';
+import React, { useState } from 'react';
 
 export default function Dashboard() {
-  const { orders, productionRecords, shippingRecords, importData } = useStore();
+  const { orders, productionRecords, shippingRecords, importData, isLoading, error } = useStore();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [initDbLoading, setInitDbLoading] = useState(false);
+
+  const handleInitDb = async () => {
+    if (!confirm('警告：此操作将初始化数据库表结构。如果表已存在，不会删除数据。确定继续吗？')) return;
+    
+    setInitDbLoading(true);
+    try {
+      const res = await fetch('/.netlify/functions/init-db', { method: 'POST' });
+      const result = await res.json();
+      if (res.ok) {
+        alert('数据库初始化成功！');
+      } else {
+        alert('初始化失败: ' + result.details);
+      }
+    } catch (err) {
+      alert('网络请求失败');
+    } finally {
+      setInitDbLoading(false);
+    }
+  };
 
   const handleExport = () => {
     const state = useStore.getState();
@@ -95,14 +115,23 @@ export default function Dashboard() {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">系统概览</h2>
       
-      {/* System Status Banner for Demo */}
+      {/* System Status Banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between text-sm text-blue-800 gap-4">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
-          <span>当前运行模式: <strong>演示环境 (Demo)</strong> - 数据存储于本地浏览器</span>
+          <span>当前运行模式: <strong>企业版 (Neon Postgres)</strong> {error && <span className="text-red-500"> - 连接失败: {error}</span>}</span>
         </div>
         
         <div className="flex items-center gap-2">
+          <button 
+            onClick={handleInitDb}
+            disabled={initDbLoading}
+            className="flex items-center gap-1 px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition-colors disabled:opacity-50"
+            title="初始化数据库表结构 (仅限首次)"
+          >
+            <Database className="h-3 w-3" />
+            <span className="hidden sm:inline">{initDbLoading ? '初始化中...' : '初始化数据库'}</span>
+          </button>
           <button 
             onClick={handleExport}
             className="flex items-center gap-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
