@@ -7,10 +7,47 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { FileText, Factory, Truck, AlertCircle } from 'lucide-react';
+import { FileText, Factory, Truck, AlertCircle, Upload, Download } from 'lucide-react';
+import React from 'react';
 
 export default function Dashboard() {
-  const { orders, productionRecords, shippingRecords } = useStore();
+  const { orders, productionRecords, shippingRecords, importData } = useStore();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const state = useStore.getState();
+    const dataToExport = {
+      orders: state.orders,
+      productionRecords: state.productionRecords,
+      shippingRecords: state.shippingRecords,
+      masterData: state.masterData
+    };
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `angang_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        importData(data);
+        alert('数据导入成功！');
+      } catch (err) {
+        alert('导入失败：文件格式错误');
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const stats = [
     { 
@@ -59,12 +96,39 @@ export default function Dashboard() {
       <h2 className="text-2xl font-bold text-gray-800">系统概览</h2>
       
       {/* System Status Banner for Demo */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between text-sm text-blue-800">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between text-sm text-blue-800 gap-4">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
           <span>当前运行模式: <strong>演示环境 (Demo)</strong> - 数据存储于本地浏览器</span>
         </div>
-        <span className="px-2 py-1 bg-blue-100 rounded text-xs font-mono">v1.0.0-MVP</span>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+            title="导出当前数据快照"
+          >
+            <Download className="h-3 w-3" />
+            <span className="hidden sm:inline">导出数据</span>
+          </button>
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+            title="导入数据快照"
+          >
+            <Upload className="h-3 w-3" />
+            <span className="hidden sm:inline">导入数据</span>
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".json" 
+            onChange={handleImport} 
+          />
+        </div>
+        
+        <span className="hidden md:inline px-2 py-1 bg-blue-100 rounded text-xs font-mono">v1.0.0-MVP</span>
       </div>
 
       {/* Stats Grid */}

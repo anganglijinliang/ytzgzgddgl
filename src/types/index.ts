@@ -33,6 +33,7 @@ export interface SubOrder {
   plannedQuantity: number; // 计划支数
   unitWeight?: number; // 单重 (吨)
   totalWeight?: number; // 重量 (吨)
+  batchNo?: string; // 批次号 (Mock for MTC)
   
   // 实时计算字段
   producedQuantity: number; // 已生产支数

@@ -1,12 +1,103 @@
 import { useParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
-import { Factory, Truck, Package, Calendar } from 'lucide-react';
+import { Factory, Truck, Package, Calendar, FileText, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function TrackOrder() {
   const { orderId } = useParams();
   const { orders } = useStore();
   
   const order = orders.find(o => o.id === orderId);
+
+  const generateMTC = () => {
+    if (!order) return;
+
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.text('MILL TEST CERTIFICATE', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('ACCORDING TO ISO 2531 / GB/T 13295', 105, 28, { align: 'center' });
+
+    // Certificate Info
+    doc.setFontSize(10);
+    doc.text(`Certificate No: MTC-${order.orderNo}-${new Date().getTime().toString().slice(-6)}`, 15, 40);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, 40);
+    doc.text(`Customer: ${order.customerName || 'N/A'}`, 15, 46);
+    doc.text(`Order No: ${order.orderNo}`, 150, 46);
+
+    // Product Details Table
+    const tableData = order.items.map((item, index) => [
+      index + 1,
+      `Ductile Iron Pipe ${item.spec} Class ${item.level}`,
+      item.batchNo || `BATCH-${new Date().getFullYear()}-${index + 101}`, // Mock Batch
+      item.plannedQuantity, // Quantity
+      'PASSED', // Appearance
+      'PASSED'  // Hydrostatic Test
+    ]);
+
+    autoTable(doc, {
+      startY: 55,
+      head: [['No', 'Description', 'Batch No', 'Qty', 'Appearance', 'Hydrostatic Test']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    // Chemical Composition (Mock Data based on Standard)
+    const chemicalData = order.items.map((item) => [
+      item.spec,
+      '3.65', // C > 3.0
+      '2.30', // Si 1.9-2.8
+      '0.35', // Mn < 0.5
+      '0.04', // P < 0.08
+      '0.01', // S < 0.02
+      '0.035' // Mg 0.03-0.05
+    ]);
+
+    let finalY = (doc as any).lastAutoTable.finalY || 100;
+    
+    doc.text('Chemical Composition (%)', 15, finalY + 10);
+    autoTable(doc, {
+      startY: finalY + 15,
+      head: [['Spec', 'C', 'Si', 'Mn', 'P', 'S', 'Mg']],
+      body: chemicalData,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    // Mechanical Properties (Mock Data)
+    const mechData = order.items.map((item) => [
+      item.spec,
+      '480', // Tensile Strength > 420 MPa
+      '12',  // Elongation > 10%
+      '175'  // Hardness < 230 HB
+    ]);
+
+    finalY = (doc as any).lastAutoTable.finalY;
+
+    doc.text('Mechanical Properties', 15, finalY + 10);
+    autoTable(doc, {
+      startY: finalY + 15,
+      head: [['Spec', 'Tensile Strength (MPa)', 'Elongation (%)', 'Hardness (HB)']],
+      body: mechData,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    // Footer
+    finalY = (doc as any).lastAutoTable.finalY;
+    doc.text('We hereby certify that the material described above has been tested', 15, finalY + 20);
+    doc.text('and found to comply with the requirements of the order and standard.', 15, finalY + 26);
+    
+    doc.setFontSize(12);
+    doc.text('Angang Group Yongtong Ductile Cast Iron Pipe Co., Ltd.', 105, finalY + 40, { align: 'center' });
+    doc.text('Quality Control Department', 105, finalY + 46, { align: 'center' });
+
+    doc.save(`MTC_${order.orderNo}.pdf`);
+  };
 
   if (!order) {
     return (
@@ -62,6 +153,33 @@ export default function TrackOrder() {
             </div>
             <p className="text-xs text-gray-400 mt-2">{totalShip} / {totalPlan} 支</p>
           </div>
+        </div>
+
+        {/* Quality Status (Industry Specific) */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <FileText className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-800">质量质保书 (MTC)</p>
+                <p className="text-xs text-gray-500">ISO 2531 / GB/T 13295</p>
+              </div>
+            </div>
+            
+            {prodProgress >= 100 ? (
+               <button 
+                 onClick={generateMTC}
+                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+               >
+                 <Download className="h-4 w-4" />
+                 下载 MTC
+               </button>
+            ) : (
+              <div className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
+                生产未完成
+              </div>
+            )}
         </div>
 
         {/* Basic Info */}

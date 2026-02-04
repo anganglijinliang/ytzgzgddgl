@@ -24,6 +24,9 @@ interface AppState {
   
   // Helper to update master data automatically
   updateMasterData: (key: keyof MasterData, value: string) => void;
+  
+  // Data Sync
+  importData: (data: Partial<AppState>) => void;
 }
 
 // Mock Initial Data
@@ -194,6 +197,16 @@ export const useStore = create<AppState>()(
             }
           };
         });
+      },
+
+      importData: (data) => {
+        set((state) => ({
+          ...state,
+          ...data,
+          // Ensure we don't overwrite current user session blindly, or maybe we should?
+          // For demo, let's keep the current user unless specifically imported
+          currentUser: state.currentUser, 
+        }));
       }
     }),
     {
