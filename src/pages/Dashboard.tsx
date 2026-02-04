@@ -58,6 +58,15 @@ export default function Dashboard() {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">系统概览</h2>
       
+      {/* System Status Banner for Demo */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between text-sm text-blue-800">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" />
+          <span>当前运行模式: <strong>演示环境 (Demo)</strong> - 数据存储于本地浏览器</span>
+        </div>
+        <span className="px-2 py-1 bg-blue-100 rounded text-xs font-mono">v1.0.0-MVP</span>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
