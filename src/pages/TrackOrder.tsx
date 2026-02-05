@@ -273,10 +273,9 @@ export default function TrackOrder() {
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-bold text-gray-900 text-lg">{item.spec}</span>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium
-                    ${item.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                    ${item.status === 'production_completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                     {item.status === 'new' ? '等待生产' : 
-                     item.status === 'production_completed' ? '待发运' :
-                     item.status === 'completed' ? '已完成' : '进行中'}
+                     item.status === 'production_completed' ? '生产完成' : '进行中'}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">

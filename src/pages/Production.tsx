@@ -114,7 +114,7 @@ export default function Production() {
 
   // Mock Dispatcher: Create a random plan for testing
   const createTestPlan = async () => {
-    const validOrders = orders.filter(o => o.status !== 'completed');
+    const validOrders = orders.filter(o => o.status !== 'production_completed');
     if (validOrders.length === 0) {
       showToast('没有可用的订单', 'error');
       return;

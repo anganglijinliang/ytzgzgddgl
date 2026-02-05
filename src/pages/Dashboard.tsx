@@ -39,7 +39,7 @@ export default function Dashboard() {
     },
     { 
       label: '未完成订单', 
-      value: orders.filter(o => o.status !== 'completed').length, 
+      value: orders.filter(o => o.status !== 'production_completed').length, 
       icon: AlertCircle,
       color: 'bg-red-500',
       textColor: 'text-red-500'
