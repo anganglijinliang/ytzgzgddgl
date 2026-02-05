@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order, ProductionPlan } from '@/types';
-import { Factory, Save, Search, CheckCircle2, ShieldCheck, AlertTriangle, Monitor, LayoutGrid, Calendar, ListTodo, PlusCircle } from 'lucide-react';
+import { Factory, Save, Search, CheckCircle2, ShieldCheck, Monitor, LayoutGrid, ListTodo } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/context/ToastContext';
@@ -24,7 +24,7 @@ export default function Production() {
   const [quantity, setQuantity] = React.useState<number>(0);
   const [team, setTeam] = React.useState<string>(localStorage.getItem('prod_team') || '甲班');
   const [shift, setShift] = React.useState<string>(localStorage.getItem('prod_shift') || '白班');
-  const [workshop, setWorkshop] = React.useState<string>(localStorage.getItem('prod_workshop') || '一车间');
+  const [workshop, _setWorkshop] = React.useState<string>(localStorage.getItem('prod_workshop') || '一车间');
   const [heatNo, setHeatNo] = React.useState<string>('');
   const [process, setProcess] = React.useState<string>(localStorage.getItem('prod_process') || 'pulling');
 
@@ -136,6 +136,7 @@ export default function Production() {
   };
 
   const activePlans = plans.filter(p => p.status === 'pending');
+  const recentRecords = productionRecords.slice(0, 10); // Simple recent records for now
 
   if (!canOperate) return <div className="p-8 text-center text-gray-500">您没有权限访问此模块</div>;
   if (isLoading && orders.length === 0) return <LoadingSpinner />;

@@ -5,7 +5,6 @@ import {
   LayoutDashboard, 
   FileInput, 
   Factory, 
-  Truck, 
   LogOut, 
   Menu,
   X,
