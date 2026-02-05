@@ -50,6 +50,25 @@ const INITIAL_MASTER_DATA: MasterData = {
   warehouses: ['成品库A', '成品库B', '待发区'],
 };
 
+const MOCK_USERS: User[] = [
+  {
+    id: 'mock-admin-id',
+    username: 'admin',
+    name: '系统管理员',
+    role: 'admin',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'mock-operator-id',
+    username: 'operator',
+    name: '操作员',
+    role: 'operator',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=operator',
+    createdAt: new Date().toISOString()
+  }
+];
+
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -95,15 +114,15 @@ export const useStore = create<AppState>()(
             const shippingRecords = await shipRes.json();
             const users = usersRes.ok ? await usersRes.json() : []; // Users might fail if table empty/not migrated yet
             
-            set({ orders, productionRecords, shippingRecords, users: users.length ? users : get().users, isLoading: false });
+            set({ orders, productionRecords, shippingRecords, users: users.length ? users : (get().users.length ? get().users : MOCK_USERS), isLoading: false });
           } else {
              // Fallback for demo if API fails (e.g. no DB connection yet)
              console.warn('API fetch failed, using local fallback');
-             set({ isLoading: false });
+             set({ isLoading: false, users: get().users.length ? get().users : MOCK_USERS });
           }
         } catch (error) {
           console.error('Failed to fetch data:', error);
-          set({ error: 'Failed to sync with database', isLoading: false });
+          set({ error: 'Failed to sync with database', isLoading: false, users: get().users.length ? get().users : MOCK_USERS });
         }
       },
 
