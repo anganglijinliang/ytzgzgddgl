@@ -37,7 +37,9 @@
 
 -   **Frontend**: React 18, TypeScript, Vite
 -   **Styling**: Tailwind CSS, Lucide Icons
--   **State Management**: Zustand (Persist to LocalStorage)
+-   **State Management**: Zustand
+-   **Backend**: Netlify Functions (Node.js)
+-   **Database**: Neon Serverless PostgreSQL
 -   **Charts**: Recharts
 -   **Tools**: XLSX (Excel export), jsPDF (PDF export), qrcode.react
 -   **Testing**: Vitest, React Testing Library
@@ -50,7 +52,15 @@
 npm install
 ```
 
-### 2. 启动开发服务器
+### 2. 配置环境变量
+
+复制 `.env.example` 为 `.env`，并设置数据库连接字符串：
+
+```env
+DATABASE_URL=postgres://user:pass@host:5432/dbname?sslmode=require
+```
+
+### 3. 启动开发服务器
 
 ```bash
 npm run dev
@@ -58,13 +68,13 @@ npm run dev
 
 访问 http://localhost:5173
 
-### 3. 运行测试
+### 4. 运行测试
 
 ```bash
 npm run test
 ```
 
-### 4. 构建生产版本
+### 5. 构建生产版本
 
 ```bash
 npm run build
@@ -74,12 +84,15 @@ npm run build
 
 ## 演示账号
 
+**通用密码**: `123456` (管理员备用: `admin123`)
+
 | 角色 | 用户名 | 权限 |
 | --- | --- | --- |
 | 管理员 | admin | 所有权限 |
 | 订单录入员 | entry | 订单录入、查看、报表 |
 | 生产主管 | prod | 生产报工、查看、报表 |
 | 发运主管 | ship | 发运管理、查看、报表 |
+| 其它 | 数据库中任意用户 | 根据角色分配权限 |
 
 ## 部署说明 (Netlify)
 
@@ -87,17 +100,14 @@ npm run build
 
 1.  将代码推送到 GitHub/GitLab
 2.  在 Netlify 创建新站点，关联仓库
-3.  配置构建命令: `npm run build`
-4.  配置发布目录: `dist`
-5.  点击 Deploy
+3.  **重要**: 在 Site Settings > Environment Variables 中添加 `DATABASE_URL`
+4.  点击 Deploy
 
-## 数据安全说明
+## 数据架构说明
 
-当前版本为纯前端演示版，数据存储在浏览器 LocalStorage 中。
-**生产环境建议**：
-1.  对接后端 API (Java/Go/Node.js) 实现数据持久化到数据库 (MySQL/PostgreSQL)
-2.  配置定时数据库备份任务
-3.  启用 HTTPS 加密传输
+-   **混合模式**: 系统优先连接 Neon PostgreSQL 数据库。
+-   **离线降级**: 如果数据库连接失败，系统会自动降级使用浏览器 LocalStorage 进行演示。
+-   **初始化**: 管理员面板提供"初始化数据库"功能，可一键建立表结构。
 
 ## 目录结构
 

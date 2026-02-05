@@ -114,16 +114,21 @@ export default function Orders() {
     setExpandedOrders(newSet);
   };
 
-  const handleCreate = (data: any) => {
-    if (editingOrder) {
-      updateOrder(editingOrder.id, data);
-      showToast('订单更新成功', 'success');
-    } else {
-      addOrder(data);
-      showToast('订单创建成功', 'success');
+  const handleCreate = async (data: any) => {
+    try {
+      if (editingOrder) {
+        // Optimistic update handled by store, but if we had async updateOrder:
+        updateOrder(editingOrder.id, data);
+        showToast('订单更新成功', 'success');
+      } else {
+        await addOrder(data);
+        showToast('订单创建成功', 'success');
+      }
+      setIsFormOpen(false);
+      setEditingOrder(undefined);
+    } catch (error) {
+      showToast('操作失败', 'error');
     }
-    setIsFormOpen(false);
-    setEditingOrder(undefined);
   };
 
   const handleEdit = (order: Order) => {
