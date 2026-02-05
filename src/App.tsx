@@ -10,7 +10,6 @@ const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Orders = lazy(() => import('./pages/Orders'));
 const Production = lazy(() => import('./pages/Production'));
-const Shipping = lazy(() => import('./pages/Shipping'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Users = lazy(() => import('./pages/Users'));
 const TrackOrder = lazy(() => import('./pages/TrackOrder'));
@@ -35,7 +34,6 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="orders" element={<Orders />} />
               <Route path="production" element={<Production />} />
-              <Route path="shipping" element={<Shipping />} />
               <Route path="reports" element={<Reports />} />
               <Route path="users" element={<Users />} />
             </Route>

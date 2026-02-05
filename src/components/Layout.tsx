@@ -32,7 +32,6 @@ export default function Layout() {
     { label: '概览', path: '/', icon: LayoutDashboard, roles: ['admin', 'order_entry', 'production', 'shipping'] },
     { label: '订单管理', path: '/orders', icon: FileInput, roles: ['admin', 'order_entry'] },
     { label: '生产跟踪', path: '/production', icon: Factory, roles: ['admin', 'production'] },
-    { label: '发运管理', path: '/shipping', icon: Truck, roles: ['admin', 'shipping'] },
     { label: '报表查询', path: '/reports', icon: BarChart3, roles: ['admin', 'order_entry', 'production', 'shipping'] },
     { label: '用户管理', path: '/users', icon: Users, roles: ['admin'] },
   ];

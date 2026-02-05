@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Order, User, MasterData, ProductionRecord, ShippingRecord } from '@/types';
+import { Order, User, MasterData, ProductionRecord, ShippingRecord, ProductionPlan } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AppState {
@@ -9,6 +9,7 @@ interface AppState {
   orders: Order[];
   productionRecords: ProductionRecord[];
   shippingRecords: ShippingRecord[];
+  plans: ProductionPlan[];
   masterData: MasterData;
   isLoading: boolean;
   error: string | null;
@@ -32,6 +33,10 @@ interface AppState {
   addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'>) => Promise<boolean>;
   addShippingRecord: (record: Omit<ShippingRecord, 'id' | 'timestamp'>) => Promise<boolean>;
   
+  // Plan Actions
+  addPlan: (plan: Omit<ProductionPlan, 'id' | 'status'>) => Promise<boolean>;
+  updatePlan: (id: string, updates: Partial<ProductionPlan>) => Promise<boolean>;
+
   // Helper to update master data automatically
   updateMasterData: (key: keyof MasterData, value: string) => void;
   
@@ -107,6 +112,7 @@ export const useStore = create<AppState>()(
       orders: [],
       productionRecords: [],
       shippingRecords: [],
+      plans: [],
       masterData: INITIAL_MASTER_DATA,
       isLoading: false,
       error: null,
@@ -369,6 +375,23 @@ export const useStore = create<AppState>()(
         }
       },
 
+      addPlan: async (planData) => {
+        const newPlan: ProductionPlan = {
+          ...planData,
+          id: uuidv4(),
+          status: 'pending'
+        };
+        set(state => ({ plans: [newPlan, ...state.plans] }));
+        return true;
+      },
+
+      updatePlan: async (id, updates) => {
+        set(state => ({
+          plans: state.plans.map(p => p.id === id ? { ...p, ...updates } : p)
+        }));
+        return true;
+      },
+
       updateMasterData: (key, value) => {
         set(state => {
           if (!value || state.masterData[key].includes(value)) return {};
@@ -396,6 +419,7 @@ export const useStore = create<AppState>()(
         currentUser: state.currentUser,
         // We still persist masterData locally for faster load, but orders/records should come from DB
         masterData: state.masterData, 
+        plans: state.plans,
       }),
     }
   )

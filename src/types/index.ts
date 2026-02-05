@@ -66,10 +66,23 @@ export interface Order {
   items: SubOrder[];
 }
 
+export interface ProductionPlan {
+  id: string;
+  orderId: string;
+  subOrderId: string;
+  workshop: string;
+  team?: string; // 指定班组
+  shift?: string; // 指定班次
+  plannedDate: string; // YYYY-MM-DD
+  quantity: number;
+  process: ProductionProcess;
+  status: 'pending' | 'completed';
+}
+
 export interface ProductionRecord {
   id: string;
-  orderId: string; // 关联主订单
-  subOrderId: string; // 关联子订单
+  orderId: string;
+  subOrderId: string;
   
   team: '甲班' | '乙班' | '丙班' | '丁班';
   shift: '白班' | '中班' | '夜班';
