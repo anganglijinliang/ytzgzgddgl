@@ -7,67 +7,10 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { FileText, Factory, Truck, AlertCircle, Upload, Download, Database } from 'lucide-react';
-import React, { useState } from 'react';
+import { FileText, Factory, Truck, AlertCircle } from 'lucide-react';
 
 export default function Dashboard() {
-  const { orders, productionRecords, shippingRecords, importData, error } = useStore();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [initDbLoading, setInitDbLoading] = useState(false);
-
-  const handleInitDb = async () => {
-    if (!confirm('警告：此操作将初始化数据库表结构。如果表已存在，不会删除数据。确定继续吗？')) return;
-    
-    setInitDbLoading(true);
-    try {
-      const res = await fetch('/.netlify/functions/init-db', { method: 'POST' });
-      const result = await res.json();
-      if (res.ok) {
-        alert('数据库初始化成功！');
-      } else {
-        alert('初始化失败: ' + result.details);
-      }
-    } catch (err) {
-      alert('网络请求失败');
-    } finally {
-      setInitDbLoading(false);
-    }
-  };
-
-  const handleExport = () => {
-    const state = useStore.getState();
-    const dataToExport = {
-      orders: state.orders,
-      productionRecords: state.productionRecords,
-      shippingRecords: state.shippingRecords,
-      masterData: state.masterData
-    };
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `angang_backup_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target?.result as string);
-        importData(data);
-        alert('数据导入成功！');
-      } catch (err) {
-        alert('导入失败：文件格式错误');
-      }
-    };
-    reader.readAsText(file);
-  };
+  const { orders, productionRecords, shippingRecords } = useStore();
 
   const stats = [
     { 
