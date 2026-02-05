@@ -16,9 +16,11 @@ import {
 import OrderForm from '@/components/OrderForm';
 import { QRCodeCanvas } from 'qrcode.react';
 import * as XLSX from 'xlsx';
+import { useToast } from '@/context/ToastContext';
 
 export default function Orders() {
   const { orders, addOrder, updateOrder, deleteOrder, currentUser } = useStore();
+  const { showToast } = useToast();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingOrder, setEditingOrder] = React.useState<Order | undefined>(undefined);
   const [expandedOrders, setExpandedOrders] = React.useState<Set<string>>(new Set());
@@ -38,7 +40,7 @@ export default function Orders() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const bstr = event.target?.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
@@ -46,29 +48,62 @@ export default function Orders() {
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
         
-        // Simple mapping (adjust as needed)
-        // Assume Excel has columns like "订单号", "客户", "规格", "级别", etc.
+        if (data.length === 0) {
+          showToast('Excel文件为空', 'error');
+          return;
+        }
+
+        // Group by OrderNo
+        const ordersMap = new Map<string, any>();
+
         data.forEach((row: any) => {
-          if (row['订单号']) {
-             // Create a simplified order structure from the row
-             // Note: Real implementation might need more complex logic to merge items into existing orders
-             // For now, we'll just log or add a basic order
-             console.log('Importing row:', row);
-             
-             // Example: addOrder({ ... }) 
-             // Since we have a complex structure, we might need to prompt user or process carefully
-             // This is a placeholder for the actual import logic
+          const orderNo = row['订单号'] || row['OrderNo'];
+          if (!orderNo) return;
+
+          if (!ordersMap.has(orderNo)) {
+            ordersMap.set(orderNo, {
+              orderNo,
+              customerName: row['客户'] || row['Customer'] || '未命名客户',
+              deliveryDate: row['交货日期'] || row['DeliveryDate'] || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+              status: 'new',
+              items: []
+            });
+          }
+
+          const order = ordersMap.get(orderNo);
+          const spec = row['规格'] || row['Spec'];
+          const quantity = Number(row['数量'] || row['Quantity'] || 0);
+
+          if (spec && quantity > 0) {
+            order.items.push({
+              spec: spec.toString().startsWith('DN') ? spec : `DN${spec}`,
+              level: row['级别'] || row['Level'] || 'K9',
+              interface: row['接口'] || row['Interface'] || 'T型',
+              quantity,
+              length: Number(row['长度'] || row['Length'] || 6),
+              remarks: row['备注'] || row['Remarks'] || ''
+            });
           }
         });
 
-        alert(`成功解析 ${data.length} 条记录 (演示模式: 仅在控制台显示解析结果)`);
+        let successCount = 0;
+        for (const orderData of ordersMap.values()) {
+           if (orderData.items.length === 0) continue;
+           await addOrder(orderData);
+           successCount++;
+        }
+
+        if (successCount > 0) {
+          showToast(`成功导入 ${successCount} 个订单`, 'success');
+        } else {
+          showToast('未找到有效订单数据', 'error');
+        }
       } catch (error) {
         console.error("Error reading file:", error);
-        alert("文件读取失败");
+        showToast("文件读取或解析失败", 'error');
       }
     };
     reader.readAsBinaryString(file);
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -82,8 +117,10 @@ export default function Orders() {
   const handleCreate = (data: any) => {
     if (editingOrder) {
       updateOrder(editingOrder.id, data);
+      showToast('订单更新成功', 'success');
     } else {
       addOrder(data);
+      showToast('订单创建成功', 'success');
     }
     setIsFormOpen(false);
     setEditingOrder(undefined);
@@ -97,6 +134,7 @@ export default function Orders() {
   const handleDelete = (id: string) => {
     if (confirm('确定要删除此订单吗？')) {
       deleteOrder(id);
+      showToast('订单删除成功', 'success');
     }
   };
 
@@ -119,6 +157,7 @@ export default function Orders() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Orders");
     XLSX.writeFile(wb, "orders_export.xlsx");
+    showToast('订单导出成功', 'success');
   };
 
   const handlePrint = () => {
