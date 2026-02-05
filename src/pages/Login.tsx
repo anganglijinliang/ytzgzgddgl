@@ -1,18 +1,22 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { Factory, ShieldCheck } from 'lucide-react';
+import { Factory, ShieldCheck, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
   const login = useStore((state) => state.login);
+  const isLoading = useStore((state) => state.isLoading);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+    
     try {
+      setError('');
       const success = await login(username, password);
       if (success) {
         navigate('/');
@@ -74,9 +78,11 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-lg shadow-blue-600/30"
+              disabled={isLoading}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              登 录
+              {isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+              {isLoading ? '登录中...' : '登 录'}
             </button>
           </form>
 

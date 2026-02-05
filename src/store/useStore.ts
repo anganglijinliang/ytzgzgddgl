@@ -88,19 +88,26 @@ export const useStore = create<AppState>()(
       error: null,
 
       login: async (username, password) => {
-        const user = get().users.find(u => u.username === username);
-        // Simple password check for demo purposes (in production, use backend auth)
-        if (user) {
-           // Allow admin default or specific passwords if needed, for now just check user existence
-           // or match a simple rule like '123456' or 'admin123' if we want to be strict
-           // For this stage, we'll assume success if user exists, or add a basic check
-           if (password && password !== '123456' && password !== 'admin123') {
-             return false; 
-           }
-           set({ currentUser: user });
-           return true;
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch('/.netlify/functions/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (response.ok) {
+            const user = await response.json();
+            set({ currentUser: user, isLoading: false });
+            return true;
+          } else {
+            set({ isLoading: false });
+            return false;
+          }
+        } catch (error) {
+          console.error('Login failed:', error);
+          set({ isLoading: false, error: 'Login connection failed' });
+          return false;
         }
-        return false;
       },
       logout: () => set({ currentUser: null }),
 

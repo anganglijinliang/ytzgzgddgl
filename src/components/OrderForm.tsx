@@ -1,7 +1,7 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Order } from '@/types';
 import { useStore } from '@/store/useStore';
-import { Plus, Trash2, Save, X } from 'lucide-react';
+import { Plus, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { getStandardWeight } from '@/constants/standards';
 
 interface OrderFormProps {
@@ -11,7 +11,7 @@ interface OrderFormProps {
 }
 
 export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormProps) {
-  const { masterData } = useStore();
+  const { masterData, isLoading } = useStore();
   const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: initialData || {
       orderNo: '',
@@ -267,9 +267,11 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
-            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            disabled={isLoading}
+            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="h-4 w-4" /> 保存订单
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} 
+            {isLoading ? '保存中...' : '保存订单'}
           </button>
         </div>
       </div>
