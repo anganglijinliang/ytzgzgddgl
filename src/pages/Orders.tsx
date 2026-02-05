@@ -166,7 +166,6 @@ export default function Orders() {
         内衬: item.lining,
         计划支数: item.plannedQuantity,
         完成支数: item.producedQuantity,
-        发运支数: item.shippedQuantity,
         状态: item.status
       }))
     );
@@ -261,10 +260,7 @@ export default function Orders() {
                     ${
                       o.status === 'new' ? '<span class="status-new">新建</span>' :
                       o.status === 'in_production' ? '<span class="status-production">生产中</span>' :
-                      o.status === 'production_completed' ? '<span class="status-done">生产完成</span>' :
-                      o.status === 'completed' ? '<span class="status-done">已完成</span>' : 
-                      o.status === 'shipping_during_production' ? '<span class="status-production">边生产边发运</span>' :
-                      o.status === 'shipping_completed_production' ? '<span class="status-done">生产完成发运中</span>' : o.status
+                      o.status === 'production_completed' ? '<span class="status-done">生产完成</span>' : o.status
                     }
                   </td>
                   <td style="font-size: 11px; color: #666;">${o.remarks || ''}</td>
@@ -386,16 +382,10 @@ export default function Orders() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                           ${order.status === 'new' ? 'bg-blue-100 text-blue-800' : 
                             order.status === 'in_production' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'shipping_during_production' ? 'bg-orange-100 text-orange-800' :
-                            order.status === 'production_completed' ? 'bg-teal-100 text-teal-800' :
-                            order.status === 'shipping_completed_production' ? 'bg-indigo-100 text-indigo-800' :
-                            order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                            order.status === 'production_completed' ? 'bg-teal-100 text-teal-800' : 'bg-gray-100 text-gray-800'}`}>
                           {order.status === 'new' ? '新建' : 
                            order.status === 'in_production' ? '生产中' :
-                           order.status === 'shipping_during_production' ? '边生产边发运' :
-                           order.status === 'production_completed' ? '生产完成' :
-                           order.status === 'shipping_completed_production' ? '生产已完成发运中' :
-                           order.status === 'completed' ? '已完成发运' : order.status}
+                           order.status === 'production_completed' ? '生产完成' : order.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -441,7 +431,6 @@ export default function Orders() {
                                   <th className="px-4 py-2 font-medium text-gray-600">内衬</th>
                                   <th className="px-4 py-2 font-medium text-gray-600">计划</th>
                                   <th className="px-4 py-2 font-medium text-gray-600">已产</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">已发</th>
                                   <th className="px-4 py-2 font-medium text-gray-600">状态</th>
                                 </tr>
                               </thead>
@@ -454,7 +443,6 @@ export default function Orders() {
                                     <td className="px-4 py-2">{item.lining}</td>
                                     <td className="px-4 py-2 font-medium">{item.plannedQuantity}</td>
                                     <td className="px-4 py-2 text-green-600">{item.producedQuantity}</td>
-                                    <td className="px-4 py-2 text-orange-600">{item.shippedQuantity}</td>
                                     <td className="px-4 py-2">{item.status === 'new' ? '-' : '进行中'}</td>
                                   </tr>
                                 ))}

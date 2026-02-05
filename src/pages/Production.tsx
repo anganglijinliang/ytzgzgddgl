@@ -497,7 +497,7 @@ export default function Production() {
                     placeholder="输入或选择订单号..."
                   />
                   <datalist id="order-list">
-                    {orders.filter(o => !['completed', 'shipping_completed_production', 'shipping_completed'].includes(o.status)).map(o => (
+                    {orders.filter(o => !['completed'].includes(o.status)).map(o => (
                       <option key={o.id} value={o.orderNo} />
                     ))}
                   </datalist>

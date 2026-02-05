@@ -6,7 +6,6 @@ describe('Order System Store', () => {
     useStore.setState({
       orders: [],
       productionRecords: [],
-      shippingRecords: [],
       currentUser: null
     });
   });
@@ -82,58 +81,5 @@ describe('Order System Store', () => {
     expect(completedOrder.items[0].producedQuantity).toBe(10);
     expect(completedOrder.items[0].status).toBe('production_completed');
     expect(completedOrder.status).toBe('production_completed');
-  });
-
-  it('should update shipping progress correctly', () => {
-    const { addOrder, addProductionRecord, addShippingRecord } = useStore.getState();
-    
-    const newOrder = {
-      orderNo: 'SHIP-001',
-      items: [{ spec: 'DN100', plannedQuantity: 10 }]
-    };
-    addOrder(newOrder as any);
-    
-    const order = useStore.getState().orders[0];
-    const subOrderId = order.items[0].id;
-
-    // Produce all first
-    addProductionRecord({
-      orderId: order.id,
-      subOrderId: subOrderId,
-      quantity: 10,
-      team: '甲班',
-      shift: '白班',
-      workshop: '一车间',
-      operatorId: 'admin'
-    });
-
-    // Ship partial
-    addShippingRecord({
-      orderId: order.id,
-      subOrderId: subOrderId,
-      quantity: 5,
-      transportType: 'truck',
-      shippingType: 'delivery',
-      operatorId: 'admin'
-    });
-
-    const shippingOrder = useStore.getState().orders[0];
-    expect(shippingOrder.items[0].shippedQuantity).toBe(5);
-    expect(shippingOrder.items[0].status).toBe('shipping_completed_production');
-    
-    // Ship rest
-    addShippingRecord({
-      orderId: order.id,
-      subOrderId: subOrderId,
-      quantity: 5,
-      transportType: 'truck',
-      shippingType: 'delivery',
-      operatorId: 'admin'
-    });
-
-    const completedOrder = useStore.getState().orders[0];
-    expect(completedOrder.items[0].shippedQuantity).toBe(10);
-    expect(completedOrder.items[0].status).toBe('completed');
-    expect(completedOrder.status).toBe('completed');
   });
 });

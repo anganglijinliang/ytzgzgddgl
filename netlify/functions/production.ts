@@ -80,18 +80,9 @@ export const handler = async (event, context) => {
             UPDATE sub_orders 
             SET status = CASE 
                   -- Completed Production
-                  WHEN produced_quantity >= planned_quantity THEN 
-                      CASE 
-                          WHEN COALESCE(shipped_quantity, 0) >= planned_quantity THEN 'completed'
-                          WHEN COALESCE(shipped_quantity, 0) > 0 THEN 'shipping_completed_production'
-                          ELSE 'production_completed'
-                      END
+                  WHEN produced_quantity >= planned_quantity THEN 'production_completed'
                   -- Partial Production
-                  ELSE 
-                      CASE 
-                          WHEN COALESCE(shipped_quantity, 0) > 0 THEN 'shipping_during_production'
-                          ELSE 'in_production'
-                      END
+                  ELSE 'in_production'
                 END
             WHERE id = $1
           `, [data.subOrderId]);

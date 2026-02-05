@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Order, User, MasterData, ProductionRecord, ShippingRecord, ProductionPlan } from '@/types';
+import { Order, User, MasterData, ProductionRecord, ProductionPlan } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AppState {
@@ -8,7 +8,6 @@ interface AppState {
   users: User[];
   orders: Order[];
   productionRecords: ProductionRecord[];
-  shippingRecords: ShippingRecord[];
   plans: ProductionPlan[];
   masterData: MasterData;
   isLoading: boolean;
@@ -31,7 +30,6 @@ interface AppState {
   deleteOrder: (id: string) => Promise<boolean>;
   
   addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'>) => Promise<boolean>;
-  addShippingRecord: (record: Omit<ShippingRecord, 'id' | 'timestamp'>) => Promise<boolean>;
   
   // Plan Actions
   addPlan: (plan: Omit<ProductionPlan, 'id' | 'status'>) => Promise<boolean>;
@@ -90,7 +88,7 @@ const MOCK_USERS: User[] = [
     id: 'mock-ship-id',
     username: 'ship',
     name: '发运主管',
-    role: 'shipping',
+    role: 'operator',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ship',
     createdAt: new Date().toISOString()
   },
@@ -111,7 +109,6 @@ export const useStore = create<AppState>()(
       users: [],
       orders: [],
       productionRecords: [],
-      shippingRecords: [],
       plans: [],
       masterData: INITIAL_MASTER_DATA,
       isLoading: false,
@@ -161,20 +158,18 @@ export const useStore = create<AppState>()(
       fetchInitialData: async () => {
         set({ isLoading: true, error: null });
         try {
-          const [ordersRes, prodRes, shipRes, usersRes] = await Promise.all([
+          const [ordersRes, prodRes, usersRes] = await Promise.all([
             fetch('/.netlify/functions/orders'),
             fetch('/.netlify/functions/production'),
-            fetch('/.netlify/functions/shipping'),
             fetch('/.netlify/functions/users')
           ]);
 
-          if (ordersRes.ok && prodRes.ok && shipRes.ok) {
+          if (ordersRes.ok && prodRes.ok) {
             const orders = await ordersRes.json();
             const productionRecords = await prodRes.json();
-            const shippingRecords = await shipRes.json();
             const users = usersRes.ok ? await usersRes.json() : []; // Users might fail if table empty/not migrated yet
             
-            set({ orders, productionRecords, shippingRecords, users: users.length ? users : (get().users.length ? get().users : MOCK_USERS), isLoading: false });
+            set({ orders, productionRecords, users: users.length ? users : (get().users.length ? get().users : MOCK_USERS), isLoading: false });
           } else {
              // Fallback for demo if API fails (e.g. no DB connection yet)
              console.warn('API fetch failed, using local fallback');
@@ -279,7 +274,6 @@ export const useStore = create<AppState>()(
               ...item,
               id: uuidv4(),
               producedQuantity: 0,
-              shippedQuantity: 0,
               status: 'new'
             }))
           };
@@ -357,24 +351,7 @@ export const useStore = create<AppState>()(
             return false;
         }
       },
-
-      addShippingRecord: async (record) => {
-        set({ isLoading: true });
-        try {
-            const response = await fetch('/.netlify/functions/shipping', {
-                method: 'POST',
-                body: JSON.stringify(record),
-            });
-            if (!response.ok) throw new Error('Failed to save shipping record');
-            await get().fetchInitialData();
-            return true;
-        } catch (error) {
-             console.error(error);
-             set({ error: 'Failed to save shipping record', isLoading: false });
-             return false;
-        }
-      },
-
+      
       addPlan: async (planData) => {
         const newPlan: ProductionPlan = {
           ...planData,

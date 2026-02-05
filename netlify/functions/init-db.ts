@@ -52,7 +52,6 @@ CREATE TABLE IF NOT EXISTS sub_orders (
     pulling_quantity INTEGER DEFAULT 0, -- 拉管
     hydrostatic_quantity INTEGER DEFAULT 0, -- 水压
     lining_quantity INTEGER DEFAULT 0, -- 衬管
-    shipped_quantity INTEGER DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'new'
 );
 
@@ -95,7 +94,8 @@ BEGIN
     END IF;
 END $$;
 
--- Shipping Records Table
+-- Shipping Records Table (Removed)
+/*
 CREATE TABLE IF NOT EXISTS shipping_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID REFERENCES orders(id),
@@ -110,14 +110,14 @@ CREATE TABLE IF NOT EXISTS shipping_records (
     operator_id TEXT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+*/
 
 -- Initial Data Seeding
 INSERT INTO users (username, name, role) 
 VALUES 
     ('admin', '系统管理员', 'admin'),
     ('entry', '订单录入员', 'order_entry'),
-    ('prod', '生产主管', 'production'),
-    ('ship', '发运主管', 'shipping')
+    ('prod', '生产主管', 'production')
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO master_data (key, value)

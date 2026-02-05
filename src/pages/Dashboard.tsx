@@ -12,11 +12,11 @@ import {
   YAxis,
   CartesianGrid
 } from 'recharts';
-import { FileText, Factory, Truck, AlertCircle, Activity, Layers } from 'lucide-react';
+import { FileText, Factory, AlertCircle, Activity, Layers } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function Dashboard() {
-  const { orders, productionRecords, shippingRecords, isLoading } = useStore();
+  const { orders, productionRecords, isLoading } = useStore();
 
   if (isLoading && orders.length === 0) {
     return <LoadingSpinner />;
@@ -38,13 +38,6 @@ export default function Dashboard() {
       textColor: 'text-green-500'
     },
     { 
-      label: '今日发运', 
-      value: shippingRecords.filter(r => r.timestamp.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0), 
-      icon: Truck,
-      color: 'bg-orange-500',
-      textColor: 'text-orange-500'
-    },
-    { 
       label: '未完成订单', 
       value: orders.filter(o => o.status !== 'completed').length, 
       icon: AlertCircle,
@@ -57,10 +50,7 @@ export default function Dashboard() {
   const orderStatusData = [
     { name: '新建', value: orders.filter(o => o.status === 'new').length },
     { name: '生产中', value: orders.filter(o => o.status === 'in_production').length },
-    { name: '边生产边发运', value: orders.filter(o => o.status === 'shipping_during_production').length },
     { name: '生产完成', value: orders.filter(o => o.status === 'production_completed').length },
-    { name: '生产完发运中', value: orders.filter(o => o.status === 'shipping_completed_production').length },
-    { name: '已完成', value: orders.filter(o => o.status === 'completed').length },
   ].filter(d => d.value > 0);
 
   // WIP Data (Process Balance)

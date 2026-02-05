@@ -50,7 +50,7 @@ export default function Reports() {
       const matchesStatus = statusFilter === 'all' 
         ? true 
         : statusFilter === 'completed' 
-          ? item.status === 'completed' || item.status === 'production_completed'
+          ? item.status === 'production_completed'
           : item.status === statusFilter;
 
       // Date Range
@@ -81,7 +81,6 @@ export default function Reports() {
         长度: item.length,
         计划支数: item.plannedQuantity,
         已产支数: item.producedQuantity,
-        已发支数: item.shippedQuantity,
         状态: item.status,
         交货日期: item.deliveryDate
       })));
@@ -109,12 +108,11 @@ export default function Reports() {
         item.spec,
         String(item.plannedQuantity),
         String(item.producedQuantity),
-        String(item.shippedQuantity),
         item.status
       ]);
 
       autoTable(doc, {
-        head: [['Order', 'Spec', 'Plan', 'Prod', 'Ship', 'Status']],
+        head: [['Order', 'Spec', 'Plan', 'Prod', 'Status']],
         body: tableData,
         startY: 20,
       });
@@ -160,7 +158,6 @@ export default function Reports() {
   // Calculate totals
   const totalPlan = React.useMemo(() => filteredData.reduce((acc, item) => acc + item.plannedQuantity, 0), [filteredData]);
   const totalProd = React.useMemo(() => filteredData.reduce((acc, item) => acc + item.producedQuantity, 0), [filteredData]);
-  const totalShip = React.useMemo(() => filteredData.reduce((acc, item) => acc + item.shippedQuantity, 0), [filteredData]);
 
   return (
     <div className="space-y-6">
@@ -233,9 +230,7 @@ export default function Reports() {
              <option value="all">全部状态</option>
              <option value="new">新建</option>
              <option value="in_production">生产中</option>
-             <option value="shipping_during_production">边生产边发运</option>
              <option value="production_completed">生产完成</option>
-             <option value="completed">已完成</option>
            </select>
         </div>
 
@@ -263,7 +258,7 @@ export default function Reports() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
           <p className="text-sm text-blue-600 font-medium">计划总支数</p>
           <p className="text-2xl font-bold text-blue-800">{totalPlan}</p>
@@ -271,10 +266,6 @@ export default function Reports() {
         <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-center">
           <p className="text-sm text-green-600 font-medium">已产总支数</p>
           <p className="text-2xl font-bold text-green-800">{totalProd}</p>
-        </div>
-        <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 text-center">
-          <p className="text-sm text-orange-600 font-medium">已发总支数</p>
-          <p className="text-2xl font-bold text-orange-800">{totalShip}</p>
         </div>
       </div>
 
@@ -289,7 +280,6 @@ export default function Reports() {
                 <th className="px-6 py-3 font-semibold text-gray-700">级别</th>
                 <th className="px-6 py-3 font-semibold text-gray-700">计划</th>
                 <th className="px-6 py-3 font-semibold text-gray-700">已产</th>
-                <th className="px-6 py-3 font-semibold text-gray-700">已发</th>
                 <th className="px-6 py-3 font-semibold text-gray-700">完成率</th>
                 <th className="px-6 py-3 font-semibold text-gray-700">状态</th>
               </tr>
@@ -302,18 +292,15 @@ export default function Reports() {
                   <td className="px-6 py-3">{item.level}</td>
                   <td className="px-6 py-3 font-medium">{item.plannedQuantity}</td>
                   <td className="px-6 py-3 text-green-600">{item.producedQuantity}</td>
-                  <td className="px-6 py-3 text-orange-600">{item.shippedQuantity}</td>
                   <td className="px-6 py-3">
                     {Math.round((item.producedQuantity / item.plannedQuantity) * 100)}%
                   </td>
                   <td className="px-6 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                       ${item.status === 'new' ? 'bg-gray-100 text-gray-800' : 
-                        item.status === 'completed' ? 'bg-green-100 text-green-800' : 
                         item.status === 'production_completed' ? 'bg-teal-100 text-teal-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       {item.status === 'new' ? '未开始' : 
-                       item.status === 'production_completed' ? '产完' :
-                       item.status === 'completed' ? '发完' : '进行中'}
+                       item.status === 'production_completed' ? '产完' : '进行中'}
                     </span>
                   </td>
                 </tr>

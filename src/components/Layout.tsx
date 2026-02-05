@@ -28,10 +28,10 @@ export default function Layout() {
   }
 
   const navItems = [
-    { label: '概览', path: '/', icon: LayoutDashboard, roles: ['admin', 'order_entry', 'production', 'shipping'] },
+    { label: '概览', path: '/', icon: LayoutDashboard, roles: ['admin', 'order_entry', 'production'] },
     { label: '订单管理', path: '/orders', icon: FileInput, roles: ['admin', 'order_entry'] },
     { label: '生产跟踪', path: '/production', icon: Factory, roles: ['admin', 'production'] },
-    { label: '报表查询', path: '/reports', icon: BarChart3, roles: ['admin', 'order_entry', 'production', 'shipping'] },
+    { label: '报表查询', path: '/reports', icon: BarChart3, roles: ['admin', 'order_entry', 'production'] },
     { label: '用户管理', path: '/users', icon: Users, roles: ['admin'] },
   ];
 
@@ -69,7 +69,7 @@ export default function Layout() {
             <UserCircle className="h-8 w-8 text-gray-400" />
             <div>
               <p className="text-sm font-medium text-gray-900">{currentUser.name}</p>
-              <p className="text-xs text-gray-500">{currentUser.role === 'admin' ? '管理员' : currentUser.role === 'order_entry' ? '录入员' : currentUser.role === 'production' ? '生产员' : '发运员'}</p>
+              <p className="text-xs text-gray-500">{currentUser.role === 'admin' ? '管理员' : currentUser.role === 'order_entry' ? '录入员' : '生产员'}</p>
             </div>
           </div>
           <button

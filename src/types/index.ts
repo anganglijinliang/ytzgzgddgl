@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'order_entry' | 'production' | 'shipping' | 'operator';
+export type UserRole = 'admin' | 'order_entry' | 'production' | 'operator';
 
 export interface User {
   id: string;
@@ -22,7 +22,7 @@ export interface MasterData {
 
 export type ProductionProcess = 'pulling' | 'hydrostatic' | 'lining' | 'packaging';
 
-export type OrderStatus = 'new' | 'in_production' | 'shipping_during_production' | 'production_completed' | 'shipping_completed_production' | 'completed';
+export type OrderStatus = 'new' | 'in_production' | 'production_completed';
 
 export interface SubOrder {
   id: string;
@@ -43,7 +43,6 @@ export interface SubOrder {
   pullingQuantity?: number; // 拉管支数
   hydrostaticQuantity?: number; // 水压支数
   liningQuantity?: number; // 衬管支数
-  shippedQuantity: number; // 已发运支数
   status: OrderStatus;
 }
 
@@ -96,19 +95,3 @@ export interface ProductionRecord {
   process?: ProductionProcess; // 工序
 }
 
-export interface ShippingRecord {
-  id: string;
-  orderId: string;
-  subOrderId: string;
-  
-  quantity: number; // 发运支数
-  transportType: 'train' | 'truck'; // 火车、汽运
-  shippingType: 'delivery' | 'pickup'; // 自发、自提
-  shippingWarehouse?: string;
-  vehicleInfo?: string; // 车辆信息
-  shippingNo?: string; // 发运单号
-  destination?: string; // 发运地
-  
-  operatorId: string;
-  timestamp: string;
-}

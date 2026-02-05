@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
-import { Factory, Truck, Package, Calendar, FileText, Printer } from 'lucide-react';
+import { Factory, Package, Calendar, FileText, Printer } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function TrackOrder() {
@@ -181,9 +181,7 @@ export default function TrackOrder() {
 
   const totalPlan = order.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
   const totalProd = order.items.reduce((acc, i) => acc + i.producedQuantity, 0);
-  const totalShip = order.items.reduce((acc, i) => acc + i.shippedQuantity, 0);
   const prodProgress = totalPlan > 0 ? Math.round((totalProd / totalPlan) * 100) : 0;
-  const shipProgress = totalPlan > 0 ? Math.round((totalShip / totalPlan) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -198,7 +196,7 @@ export default function TrackOrder() {
         </div>
 
         {/* Status Cards */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center gap-2 mb-2 text-green-600">
               <Factory className="h-5 w-5" />
@@ -209,18 +207,6 @@ export default function TrackOrder() {
               <div className="bg-green-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${prodProgress}%` }} />
             </div>
             <p className="text-xs text-gray-400 mt-2">{totalProd} / {totalPlan} 支</p>
-          </div>
-          
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-2 mb-2 text-orange-600">
-              <Truck className="h-5 w-5" />
-              <span className="font-bold">发运进度</span>
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{shipProgress}%</div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div className="bg-orange-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${shipProgress}%` }} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">{totalShip} / {totalPlan} 支</p>
           </div>
         </div>
 
@@ -308,15 +294,6 @@ export default function TrackOrder() {
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-1.5">
                       <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${Math.min(item.producedQuantity/item.plannedQuantity*100, 100)}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>发运 ({item.shippedQuantity}/{item.plannedQuantity})</span>
-                      <span>{Math.round(item.shippedQuantity/item.plannedQuantity*100)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5">
-                      <div className="bg-orange-500 h-1.5 rounded-full" style={{ width: `${Math.min(item.shippedQuantity/item.plannedQuantity*100, 100)}%` }} />
                     </div>
                   </div>
                 </div>
