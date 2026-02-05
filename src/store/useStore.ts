@@ -13,6 +13,12 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
   
+  // User Actions
+  fetchUsers: () => Promise<void>;
+  addUser: (user: Omit<User, 'id'>) => Promise<void>;
+  updateUser: (id: string, data: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+  
   // Actions
   login: (username: string) => void;
   logout: () => void;
@@ -21,7 +27,7 @@ interface AppState {
   
   addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<void>;
   updateOrder: (id: string, data: Partial<Order>) => void; // Keeping sync for now, should be async later
-  deleteOrder: (id: string) => void; // Keeping sync for now
+  deleteOrder: (id: string) => Promise<void>;
   
   addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'>) => Promise<void>;
   addShippingRecord: (record: Omit<ShippingRecord, 'id' | 'timestamp'>) => Promise<void>;
@@ -44,18 +50,11 @@ const INITIAL_MASTER_DATA: MasterData = {
   warehouses: ['成品库A', '成品库B', '待发区'],
 };
 
-const MOCK_USERS: User[] = [
-  { id: '1', username: 'admin', name: '系统管理员', role: 'admin' },
-  { id: '2', username: 'entry', name: '订单录入员', role: 'order_entry' },
-  { id: '3', username: 'prod', name: '生产主管', role: 'production' },
-  { id: '4', username: 'ship', name: '发运主管', role: 'shipping' },
-];
-
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       currentUser: null,
-      users: MOCK_USERS,
+      users: [],
       orders: [],
       productionRecords: [],
       shippingRecords: [],
@@ -72,17 +71,20 @@ export const useStore = create<AppState>()(
       fetchInitialData: async () => {
         set({ isLoading: true, error: null });
         try {
-          const [ordersRes, prodRes, shipRes] = await Promise.all([
+          const [ordersRes, prodRes, shipRes, usersRes] = await Promise.all([
             fetch('/.netlify/functions/orders'),
             fetch('/.netlify/functions/production'),
-            fetch('/.netlify/functions/shipping')
+            fetch('/.netlify/functions/shipping'),
+            fetch('/.netlify/functions/users')
           ]);
 
           if (ordersRes.ok && prodRes.ok && shipRes.ok) {
             const orders = await ordersRes.json();
             const productionRecords = await prodRes.json();
             const shippingRecords = await shipRes.json();
-            set({ orders, productionRecords, shippingRecords, isLoading: false });
+            const users = usersRes.ok ? await usersRes.json() : []; // Users might fail if table empty/not migrated yet
+            
+            set({ orders, productionRecords, shippingRecords, users: users.length ? users : get().users, isLoading: false });
           } else {
              // Fallback for demo if API fails (e.g. no DB connection yet)
              console.warn('API fetch failed, using local fallback');
@@ -91,6 +93,59 @@ export const useStore = create<AppState>()(
         } catch (error) {
           console.error('Failed to fetch data:', error);
           set({ error: 'Failed to sync with database', isLoading: false });
+        }
+      },
+
+      fetchUsers: async () => {
+        try {
+          const response = await fetch('/.netlify/functions/users');
+          if (response.ok) {
+            const users = await response.json();
+            set({ users });
+          }
+        } catch (error) {
+          console.error('Failed to fetch users:', error);
+        }
+      },
+
+      addUser: async (userData) => {
+        try {
+          const response = await fetch('/.netlify/functions/users', {
+            method: 'POST',
+            body: JSON.stringify(userData),
+          });
+          if (response.ok) {
+            await get().fetchUsers();
+          }
+        } catch (error) {
+          console.error('Failed to add user:', error);
+        }
+      },
+
+      updateUser: async (id, data) => {
+        try {
+          const response = await fetch('/.netlify/functions/users', {
+            method: 'PUT',
+            body: JSON.stringify({ id, ...data }),
+          });
+          if (response.ok) {
+            await get().fetchUsers();
+          }
+        } catch (error) {
+          console.error('Failed to update user:', error);
+        }
+      },
+
+      deleteUser: async (id) => {
+        try {
+          const response = await fetch(`/.netlify/functions/users?id=${id}`, {
+            method: 'DELETE',
+          });
+          if (response.ok) {
+            await get().fetchUsers();
+          }
+        } catch (error) {
+          console.error('Failed to delete user:', error);
         }
       },
 
@@ -152,11 +207,17 @@ export const useStore = create<AppState>()(
         }));
       },
 
-      deleteOrder: (id) => {
-        set(state => ({
-          orders: state.orders.filter(o => o.id !== id)
-        }));
-      },
+      deleteOrder: async (id) => {
+    try {
+      await fetch(`/.netlify/functions/orders?id=${id}`, { method: 'DELETE' });
+      // Optimistic update
+      set(state => ({
+        orders: state.orders.filter(o => o.id !== id)
+      }));
+    } catch (error) {
+      console.error('Failed to delete order:', error);
+    }
+  },
 
       addProductionRecord: async (record) => {
         set({ isLoading: true });

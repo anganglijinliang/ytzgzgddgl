@@ -1,12 +1,14 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { FileDown, Printer, Search } from 'lucide-react';
+import { FileDown, Printer, Search, BarChart2, PieChart } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function Reports() {
-  const { orders } = useStore();
+  const { orders, productionRecords } = useStore();
+  const [activeTab, setActiveTab] = React.useState<'orders' | 'efficiency'>('orders');
   
   // Filter States
   const [dateRange, setDateRange] = React.useState({ start: '', end: '' });
@@ -99,15 +101,59 @@ export default function Reports() {
     doc.save("report.pdf");
   };
 
-  // Stats
-  const totalPlan = filteredData.reduce((acc, curr) => acc + curr.plannedQuantity, 0);
-  const totalProd = filteredData.reduce((acc, curr) => acc + curr.producedQuantity, 0);
-  const totalShip = filteredData.reduce((acc, curr) => acc + curr.shippedQuantity, 0);
+  // Stats for Efficiency
+  const efficiencyData = React.useMemo(() => {
+    const teamStats: Record<string, any> = {};
+    
+    productionRecords.forEach(record => {
+      const key = `${record.team}-${record.shift}`;
+      if (!teamStats[key]) {
+        teamStats[key] = {
+          name: key,
+          team: record.team,
+          shift: record.shift,
+          quantity: 0,
+          pulling: 0,
+          hydrostatic: 0,
+          lining: 0,
+          packaging: 0
+        };
+      }
+      teamStats[key].quantity += record.quantity;
+      if (record.process === 'pulling') teamStats[key].pulling += record.quantity;
+      else if (record.process === 'hydrostatic') teamStats[key].hydrostatic += record.quantity;
+      else if (record.process === 'lining') teamStats[key].lining += record.quantity;
+      else teamStats[key].packaging += record.quantity;
+    });
+
+    return Object.values(teamStats).sort((a, b) => b.quantity - a.quantity);
+  }, [productionRecords]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800">报表查询</h2>
+        
+        {/* Tab Switcher */}
+        <div className="flex bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+              activeTab === 'orders' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            订单报表
+          </button>
+          <button
+            onClick={() => setActiveTab('efficiency')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+              activeTab === 'efficiency' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            生产效率分析
+          </button>
+        </div>
+
         <div className="flex gap-2">
           <button onClick={exportExcel} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
             <FileDown className="h-4 w-4" /> 导出 Excel
@@ -118,8 +164,10 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-end">
+      {activeTab === 'orders' ? (
+        <>
+          {/* Filters */}
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[200px]">
           <label className="block text-xs font-medium text-gray-500 mb-1">关键词搜索</label>
           <div className="relative">
@@ -240,6 +288,76 @@ export default function Reports() {
           </table>
         </div>
       </div>
+      </>
+      ) : (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">班组生产对比</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={efficiencyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="quantity" name="总支数" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+             </div>
+             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">工序明细</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={efficiencyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="pulling" name="拉管" stackId="a" fill="#8884d8" />
+                      <Bar dataKey="hydrostatic" name="水压" stackId="a" fill="#82ca9d" />
+                      <Bar dataKey="lining" name="衬管" stackId="a" fill="#ffc658" />
+                      <Bar dataKey="packaging" name="打包" stackId="a" fill="#ff8042" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+             </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-800">详细数据</h3>
+            </div>
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 font-semibold text-gray-700">班组/班次</th>
+                  <th className="px-6 py-3 font-semibold text-gray-700">总完成支数</th>
+                  <th className="px-6 py-3 font-semibold text-gray-700">拉管</th>
+                  <th className="px-6 py-3 font-semibold text-gray-700">水压</th>
+                  <th className="px-6 py-3 font-semibold text-gray-700">衬管</th>
+                  <th className="px-6 py-3 font-semibold text-gray-700">打包</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {efficiencyData.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-6 py-3 font-medium text-gray-900">{item.name}</td>
+                    <td className="px-6 py-3 font-bold text-blue-600">{item.quantity}</td>
+                    <td className="px-6 py-3">{item.pulling}</td>
+                    <td className="px-6 py-3">{item.hydrostatic}</td>
+                    <td className="px-6 py-3">{item.lining}</td>
+                    <td className="px-6 py-3">{item.packaging}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,6 +15,7 @@ export const handler = async (event, context) => {
             json_agg(so.*) as items 
           FROM orders o
           LEFT JOIN sub_orders so ON o.id = so.order_id
+          WHERE o.deleted_at IS NULL
           GROUP BY o.id
           ORDER BY o.created_at DESC
         `);
@@ -111,6 +112,25 @@ export const handler = async (event, context) => {
         return {
           statusCode: 201,
           body: JSON.stringify({ id: orderId, message: 'Order created successfully' }),
+        };
+      }
+
+      else if (httpMethod === 'DELETE') {
+        const { id } = event.queryStringParameters || {};
+        
+        if (!id) {
+          return { statusCode: 400, body: 'Missing order ID' };
+        }
+
+        await client.query(`
+          UPDATE orders 
+          SET deleted_at = CURRENT_TIMESTAMP 
+          WHERE id = $1
+        `, [id]);
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: 'Order deleted successfully' }),
         };
       }
       

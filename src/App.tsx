@@ -7,6 +7,7 @@ import Orders from './pages/Orders';
 import Production from './pages/Production';
 import Shipping from './pages/Shipping';
 import Reports from './pages/Reports';
+import Users from './pages/Users';
 import TrackOrder from './pages/TrackOrder';
 import { useStore } from './store/useStore';
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="production" element={<Production />} />
           <Route path="shipping" element={<Shipping />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="users" element={<Users />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

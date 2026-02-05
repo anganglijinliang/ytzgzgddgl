@@ -205,12 +205,27 @@ export default function Orders() {
             />
           </div>
           {canEdit && (
-            <button
-              onClick={() => { setEditingOrder(undefined); setIsFormOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              <Plus className="h-4 w-4" /> 新增订单
-            </button>
+            <div className="flex gap-2">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                className="hidden" 
+                accept=".xlsx,.xls" 
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                <Upload className="h-4 w-4" /> 导入订单
+              </button>
+              <button
+                onClick={() => { setEditingOrder(undefined); setIsFormOpen(true); }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                <Plus className="h-4 w-4" /> 新增订单
+              </button>
+            </div>
           )}
           <button onClick={exportExcel} className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100" title="导出 Excel">
             <FileSpreadsheet className="h-5 w-5" />

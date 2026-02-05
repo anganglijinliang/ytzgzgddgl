@@ -23,44 +23,89 @@ export const PIPE_STANDARDS: PipeStandard[] = [
   { spec: 'DN150', level: 'C30', unitWeight: 135 },
 
   // DN200
-  { spec: 'DN200', level: 'K9', unitWeight: 199 },
+  { spec: 'DN200', level: 'K9', unitWeight: 194 },
   { spec: 'DN200', level: 'C40', unitWeight: 194 },
   { spec: 'DN200', level: 'C30', unitWeight: 185 },
 
+  // DN250
+  { spec: 'DN250', level: 'K9', unitWeight: 255 },
+  { spec: 'DN250', level: 'C40', unitWeight: 250 },
+  { spec: 'DN250', level: 'C30', unitWeight: 240 },
+
   // DN300
-  { spec: 'DN300', level: 'K9', unitWeight: 335 }, // Updated
-  { spec: 'DN300', level: 'C40', unitWeight: 320 },
+  { spec: 'DN300', level: 'K9', unitWeight: 323 },
+  { spec: 'DN300', level: 'C40', unitWeight: 315 },
   { spec: 'DN300', level: 'C30', unitWeight: 300 },
   
+  // DN350
+  { spec: 'DN350', level: 'K9', unitWeight: 403 },
+  { spec: 'DN350', level: 'C40', unitWeight: 395 },
+  { spec: 'DN350', level: 'C30', unitWeight: 380 },
+
   // DN400
-  { spec: 'DN400', level: 'K9', unitWeight: 495 }, // Updated
-  { spec: 'DN400', level: 'C40', unitWeight: 460 },
-  { spec: 'DN400', level: 'C30', unitWeight: 430 },
+  { spec: 'DN400', level: 'K9', unitWeight: 482 },
+  { spec: 'DN400', level: 'C40', unitWeight: 470 },
+  { spec: 'DN400', level: 'C30', unitWeight: 450 },
   
+  // DN450
+  { spec: 'DN450', level: 'K9', unitWeight: 577 },
+  { spec: 'DN450', level: 'C40', unitWeight: 565 },
+  { spec: 'DN450', level: 'C30', unitWeight: 540 },
+
   // DN500
-  { spec: 'DN500', level: 'K9', unitWeight: 680 }, // Updated
-  { spec: 'DN500', level: 'C40', unitWeight: 620 },
-  { spec: 'DN500', level: 'C30', unitWeight: 580 },
+  { spec: 'DN500', level: 'K9', unitWeight: 669 },
+  { spec: 'DN500', level: 'C40', unitWeight: 650 },
+  { spec: 'DN500', level: 'C30', unitWeight: 620 },
   
   // DN600
-  { spec: 'DN600', level: 'K9', unitWeight: 885 }, // Updated
-  { spec: 'DN600', level: 'C40', unitWeight: 800 },
-  { spec: 'DN600', level: 'C30', unitWeight: 750 },
+  { spec: 'DN600', level: 'K9', unitWeight: 882 },
+  { spec: 'DN600', level: 'C40', unitWeight: 860 },
+  { spec: 'DN600', level: 'C30', unitWeight: 820 },
   
+  // DN700
+  { spec: 'DN700', level: 'K9', unitWeight: 1123 },
+  { spec: 'DN700', level: 'C40', unitWeight: 1100 },
+  { spec: 'DN700', level: 'C30', unitWeight: 1050 },
+
   // DN800
-  { spec: 'DN800', level: 'K9', unitWeight: 1370 }, // Updated
-  { spec: 'DN800', level: 'C40', unitWeight: 1250 },
-  { spec: 'DN800', level: 'C30', unitWeight: 1150 },
+  { spec: 'DN800', level: 'K9', unitWeight: 1394 },
+  { spec: 'DN800', level: 'C40', unitWeight: 1360 },
+  { spec: 'DN800', level: 'C30', unitWeight: 1300 },
   
+  // DN900
+  { spec: 'DN900', level: 'K9', unitWeight: 1690 },
+  { spec: 'DN900', level: 'C40', unitWeight: 1650 },
+  { spec: 'DN900', level: 'C30', unitWeight: 1580 },
+
   // DN1000
-  { spec: 'DN1000', level: 'K9', unitWeight: 1960 }, // Updated
-  { spec: 'DN1000', level: 'C40', unitWeight: 1780 },
-  { spec: 'DN1000', level: 'C25', unitWeight: 1600 },
+  { spec: 'DN1000', level: 'K9', unitWeight: 2017 },
+  { spec: 'DN1000', level: 'C40', unitWeight: 1980 },
+  { spec: 'DN1000', level: 'C25', unitWeight: 1880 },
   
+  // DN1100
+  { spec: 'DN1100', level: 'K9', unitWeight: 2370 },
+  { spec: 'DN1100', level: 'C40', unitWeight: 2320 },
+  { spec: 'DN1100', level: 'C25', unitWeight: 2200 },
+
   // DN1200
-  { spec: 'DN1200', level: 'K9', unitWeight: 2760 }, // Updated to match vendor/calculation
-  { spec: 'DN1200', level: 'C40', unitWeight: 2500 },
-  { spec: 'DN1200', level: 'C25', unitWeight: 2300 },
+  { spec: 'DN1200', level: 'K9', unitWeight: 2758 },
+  { spec: 'DN1200', level: 'C40', unitWeight: 2700 },
+  { spec: 'DN1200', level: 'C25', unitWeight: 2560 },
+
+  // DN1400
+  { spec: 'DN1400', level: 'K9', unitWeight: 3669 },
+  { spec: 'DN1400', level: 'C40', unitWeight: 3600 },
+  { spec: 'DN1400', level: 'C25', unitWeight: 3400 },
+
+  // DN1500
+  { spec: 'DN1500', level: 'K9', unitWeight: 4160 },
+  { spec: 'DN1500', level: 'C40', unitWeight: 4100 },
+  { spec: 'DN1500', level: 'C25', unitWeight: 3900 },
+
+  // DN1600
+  { spec: 'DN1600', level: 'K9', unitWeight: 4668 },
+  { spec: 'DN1600', level: 'C40', unitWeight: 4600 },
+  { spec: 'DN1600', level: 'C25', unitWeight: 4400 },
 ];
 
 export const getStandardWeight = (spec: string, level: string): number | undefined => {

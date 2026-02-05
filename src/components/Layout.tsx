@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   UserCircle,
-  BarChart3
+  BarChart3,
+  Users
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -33,6 +34,7 @@ export default function Layout() {
     { label: '生产跟踪', path: '/production', icon: Factory, roles: ['admin', 'production'] },
     { label: '发运管理', path: '/shipping', icon: Truck, roles: ['admin', 'shipping'] },
     { label: '报表查询', path: '/reports', icon: BarChart3, roles: ['admin', 'order_entry', 'production', 'shipping'] },
+    { label: '用户管理', path: '/users', icon: Users, roles: ['admin'] },
   ];
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(currentUser.role));
