@@ -228,10 +228,11 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                       <input
                         type="number"
                         step="0.001"
-                        {...register(`items.${index}.unitWeight`)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 text-sm"
+                        {...register(`items.${index}.unitWeight`, {
+                          onChange: () => handleQuantityChange(index)
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         placeholder="自动"
-                        readOnly
                       />
                     </div>
                     <div>
