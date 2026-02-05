@@ -15,6 +15,7 @@ export default function Production() {
   const [shift, setShift] = React.useState<string>('白班');
   const [workshop, setWorkshop] = React.useState<string>('一车间');
   const [heatNo, setHeatNo] = React.useState<string>('');
+  const [process, setProcess] = React.useState<string>('pulling');
   
   const canOperate = currentUser?.role === 'admin' || currentUser?.role === 'production';
 
@@ -41,12 +42,14 @@ export default function Production() {
       quantity: Number(quantity),
       workshop,
       heatNo,
+      process: process as any,
       operatorId: currentUser?.id || 'unknown'
     });
 
     alert('生产记录已提交');
     setQuantity(0);
     setHeatNo(''); // Reset heatNo
+    // process keeps same selection usually
     // Optional: Reset selection or keep for continuous entry
   };
 
@@ -80,7 +83,7 @@ export default function Production() {
                   placeholder="输入或选择订单号..."
                 />
                 <datalist id="order-list">
-                  {orders.filter(o => o.status !== 'shipping_completed').map(o => (
+                  {orders.filter(o => !['completed', 'shipping_completed_production', 'shipping_completed'].includes(o.status)).map(o => (
                     <option key={o.id} value={o.orderNo} />
                   ))}
                 </datalist>
@@ -103,7 +106,12 @@ export default function Production() {
                       </div>
                       <div className="flex justify-between items-center text-xs mt-1 opacity-90">
                         <span>{item.interfaceType} | {item.coating}</span>
-                        <span>{item.producedQuantity} / {item.plannedQuantity}</span>
+                        <span>{item.producedQuantity} / {item.plannedQuantity} (成品)</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 text-[10px] mt-1 text-gray-500">
+                         <div>拉管: {item.pullingQuantity || 0}</div>
+                         <div>水压: {item.hydrostaticQuantity || 0}</div>
+                         <div>衬管: {item.liningQuantity || 0}</div>
                       </div>
                       {/* Progress Bar */}
                       <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -119,6 +127,31 @@ export default function Production() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">工序 (Process)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { id: 'pulling', label: '拉管' },
+                    { id: 'hydrostatic', label: '水压' },
+                    { id: 'lining', label: '衬管' },
+                    { id: 'packaging', label: '打包/入库' }
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setProcess(p.id)}
+                      className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${
+                        process === p.id 
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">班组</label>
                 <select
@@ -211,6 +244,11 @@ export default function Production() {
                   </div>
                   <div className="text-xs text-gray-500">
                     {item?.spec} {item?.level} - {record.team}/{record.shift}
+                    <span className="ml-2 px-1.5 py-0.5 bg-gray-200 rounded text-gray-700">
+                      {record.process === 'pulling' ? '拉管' : 
+                       record.process === 'hydrostatic' ? '水压' : 
+                       record.process === 'lining' ? '衬管' : '打包'}
+                    </span>
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
                     {new Date(record.timestamp).toLocaleString()}

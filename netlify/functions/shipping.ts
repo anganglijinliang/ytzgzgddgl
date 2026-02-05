@@ -61,10 +61,16 @@ export const handler = async (event, context) => {
         // Update SubOrder shipped_quantity
         await client.query(`
           UPDATE sub_orders 
-          SET shipped_quantity = shipped_quantity + $1,
+          SET shipped_quantity = COALESCE(shipped_quantity, 0) + $1,
               status = CASE 
-                WHEN shipped_quantity + $1 >= planned_quantity THEN 'shipping_completed'
-                ELSE 'shipping_partial'
+                -- Completed Shipping
+                WHEN COALESCE(shipped_quantity, 0) + $1 >= planned_quantity THEN 'completed'
+                -- Partial Shipping
+                ELSE 
+                    CASE 
+                        WHEN COALESCE(produced_quantity, 0) >= planned_quantity THEN 'shipping_completed_production'
+                        ELSE 'shipping_during_production'
+                    END
               END
           WHERE id = $2
         `, [data.quantity, data.subOrderId]);

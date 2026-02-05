@@ -46,6 +46,9 @@ export const handler = async (event, context) => {
             totalWeight: item.total_weight,
             batchNo: item.batch_no,
             producedQuantity: item.produced_quantity,
+            pullingQuantity: item.pulling_quantity || 0,
+            hydrostaticQuantity: item.hydrostatic_quantity || 0,
+            liningQuantity: item.lining_quantity || 0,
             shippedQuantity: item.shipped_quantity,
             status: item.status
           }))

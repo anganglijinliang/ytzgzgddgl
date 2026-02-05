@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS production_records (
     warehouse TEXT,
     operator_id TEXT NOT NULL, -- Could be username or user UUID
     heat_no TEXT, -- 炉号
+    process TEXT DEFAULT 'packaging', -- 工序: pulling, hydrostatic, lining, packaging
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

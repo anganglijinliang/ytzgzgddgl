@@ -48,6 +48,9 @@ CREATE TABLE IF NOT EXISTS sub_orders (
     total_weight NUMERIC(12, 3),
     batch_no TEXT,
     produced_quantity INTEGER DEFAULT 0,
+    pulling_quantity INTEGER DEFAULT 0, -- 拉管
+    hydrostatic_quantity INTEGER DEFAULT 0, -- 水压
+    lining_quantity INTEGER DEFAULT 0, -- 衬管
     shipped_quantity INTEGER DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'new'
 );
@@ -64,6 +67,7 @@ CREATE TABLE IF NOT EXISTS production_records (
     warehouse TEXT,
     operator_id TEXT NOT NULL,
     heat_no TEXT,
+    process TEXT DEFAULT 'packaging',
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -72,6 +76,21 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='heat_no') THEN
         ALTER TABLE production_records ADD COLUMN heat_no TEXT;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='process') THEN
+        ALTER TABLE production_records ADD COLUMN process TEXT DEFAULT 'packaging';
+    END IF;
+
+    -- SubOrders Migrations
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='pulling_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN pulling_quantity INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='hydrostatic_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN hydrostatic_quantity INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='lining_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN lining_quantity INTEGER DEFAULT 0;
     END IF;
 END $$;
 

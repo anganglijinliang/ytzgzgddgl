@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
-import { Factory, Truck, Package, Calendar, FileText, Download } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { Factory, Truck, Package, Calendar, FileText, Printer } from 'lucide-react';
 
 export default function TrackOrder() {
   const { orderId } = useParams();
@@ -10,93 +8,159 @@ export default function TrackOrder() {
   
   const order = orders.find(o => o.id === orderId);
 
-  const generateMTC = () => {
+  const handlePrintMTC = () => {
     if (!order) return;
 
-    const doc = new jsPDF();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const chemicalData = order.items.map((item) => ({
+      spec: item.spec,
+      c: '3.65', si: '2.30', mn: '0.35', p: '0.04', s: '0.01', mg: '0.035'
+    }));
+
+    const mechData = order.items.map((item) => ({
+      spec: item.spec,
+      tensile: '480', elongation: '12', hardness: '175'
+    }));
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>MTC - ${order.orderNo}</title>
+          <style>
+            body { font-family: "SimSun", "Songti SC", serif; padding: 40px; color: #000; max-width: 800px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
+            .header h2 { margin: 5px 0 0; font-size: 14px; font-weight: normal; }
+            .meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 12px; }
+            .section-title { font-weight: bold; font-size: 14px; margin-top: 20px; margin-bottom: 10px; border-left: 4px solid #000; padding-left: 8px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
+            th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+            th { background-color: #f0f0f0; }
+            .footer { margin-top: 40px; text-align: center; font-size: 12px; }
+            .stamp { margin-top: 20px; display: inline-block; border: 2px solid #d00; color: #d00; padding: 10px 20px; transform: rotate(-5deg); font-weight: bold; border-radius: 4px; }
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>质量保证书 (MILL TEST CERTIFICATE)</h1>
+            <h2>ACCORDING TO ISO 2531 / GB/T 13295</h2>
+          </div>
+
+          <div class="meta">
+            <div>
+              <p>证书编号 (Cert No): MTC-${order.orderNo}-${new Date().getTime().toString().slice(-6)}</p>
+              <p>客户名称 (Customer): ${order.customerName || 'N/A'}</p>
+            </div>
+            <div style="text-align: right;">
+              <p>日期 (Date): ${new Date().toLocaleDateString()}</p>
+              <p>订单号 (Order No): ${order.orderNo}</p>
+            </div>
+          </div>
+
+          <div class="section-title">1. 产品明细 (Product Details)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>序号 (No)</th>
+                <th>产品描述 (Description)</th>
+                <th>批号 (Batch No)</th>
+                <th>数量 (Qty)</th>
+                <th>外观 (Appearance)</th>
+                <th>水压试验 (Hydrostatic)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map((item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>球墨铸铁管 (Ductile Iron Pipe)<br/>${item.spec} Class ${item.level}</td>
+                  <td>${item.batchNo || `BATCH-${new Date().getFullYear()}-${index + 101}`}</td>
+                  <td>${item.plannedQuantity}</td>
+                  <td>合格 (PASSED)</td>
+                  <td>合格 (PASSED)</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="section-title">2. 化学成分 (Chemical Composition %)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>规格 (Spec)</th>
+                <th>C</th>
+                <th>Si</th>
+                <th>Mn</th>
+                <th>P</th>
+                <th>S</th>
+                <th>Mg</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${chemicalData.map(d => `
+                <tr>
+                  <td>${d.spec}</td>
+                  <td>${d.c}</td>
+                  <td>${d.si}</td>
+                  <td>${d.mn}</td>
+                  <td>${d.p}</td>
+                  <td>${d.s}</td>
+                  <td>${d.mg}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="section-title">3. 力学性能 (Mechanical Properties)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>规格 (Spec)</th>
+                <th>抗拉强度 (Tensile Strength MPa)</th>
+                <th>延伸率 (Elongation %)</th>
+                <th>硬度 (Hardness HB)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${mechData.map(d => `
+                <tr>
+                  <td>${d.spec}</td>
+                  <td>${d.tensile}</td>
+                  <td>${d.elongation}</td>
+                  <td>${d.hardness}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>兹证明上述材料已按标准要求进行测试，结果符合要求。</p>
+            <p>We hereby certify that the material described above has been tested and found to comply with the requirements.</p>
+            
+            <div style="margin-top: 30px;">
+              <p style="font-weight: bold; font-size: 14px;">安钢集团永通球墨铸铁管有限责任公司</p>
+              <p>Angang Group Yongtong Ductile Cast Iron Pipe Co., Ltd.</p>
+              <p>质量管理部 (Quality Control Dept)</p>
+            </div>
+            
+            <div class="stamp">质量检验合格章<br/>QC PASSED</div>
+          </div>
+        </body>
+      </html>
+    `;
     
-    // Header
-    doc.setFontSize(22);
-    doc.text('MILL TEST CERTIFICATE', 105, 20, { align: 'center' });
-    doc.setFontSize(10);
-    doc.text('ACCORDING TO ISO 2531 / GB/T 13295', 105, 28, { align: 'center' });
-
-    // Certificate Info
-    doc.setFontSize(10);
-    doc.text(`Certificate No: MTC-${order.orderNo}-${new Date().getTime().toString().slice(-6)}`, 15, 40);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, 40);
-    doc.text(`Customer: ${order.customerName || 'N/A'}`, 15, 46);
-    doc.text(`Order No: ${order.orderNo}`, 150, 46);
-
-    // Product Details Table
-    const tableData = order.items.map((item, index) => [
-      index + 1,
-      `Ductile Iron Pipe ${item.spec} Class ${item.level}`,
-      item.batchNo || `BATCH-${new Date().getFullYear()}-${index + 101}`, // Mock Batch
-      item.plannedQuantity, // Quantity
-      'PASSED', // Appearance
-      'PASSED'  // Hydrostatic Test
-    ]);
-
-    autoTable(doc, {
-      startY: 55,
-      head: [['No', 'Description', 'Batch No', 'Qty', 'Appearance', 'Hydrostatic Test']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185] },
-    });
-
-    // Chemical Composition (Mock Data based on Standard)
-    const chemicalData = order.items.map((item) => [
-      item.spec,
-      '3.65', // C > 3.0
-      '2.30', // Si 1.9-2.8
-      '0.35', // Mn < 0.5
-      '0.04', // P < 0.08
-      '0.01', // S < 0.02
-      '0.035' // Mg 0.03-0.05
-    ]);
-
-    let finalY = (doc as any).lastAutoTable.finalY || 100;
-    
-    doc.text('Chemical Composition (%)', 15, finalY + 10);
-    autoTable(doc, {
-      startY: finalY + 15,
-      head: [['Spec', 'C', 'Si', 'Mn', 'P', 'S', 'Mg']],
-      body: chemicalData,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185] },
-    });
-
-    // Mechanical Properties (Mock Data)
-    const mechData = order.items.map((item) => [
-      item.spec,
-      '480', // Tensile Strength > 420 MPa
-      '12',  // Elongation > 10%
-      '175'  // Hardness < 230 HB
-    ]);
-
-    finalY = (doc as any).lastAutoTable.finalY;
-
-    doc.text('Mechanical Properties', 15, finalY + 10);
-    autoTable(doc, {
-      startY: finalY + 15,
-      head: [['Spec', 'Tensile Strength (MPa)', 'Elongation (%)', 'Hardness (HB)']],
-      body: mechData,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185] },
-    });
-
-    // Footer
-    finalY = (doc as any).lastAutoTable.finalY;
-    doc.text('We hereby certify that the material described above has been tested', 15, finalY + 20);
-    doc.text('and found to comply with the requirements of the order and standard.', 15, finalY + 26);
-    
-    doc.setFontSize(12);
-    doc.text('Angang Group Yongtong Ductile Cast Iron Pipe Co., Ltd.', 105, finalY + 40, { align: 'center' });
-    doc.text('Quality Control Department', 105, finalY + 46, { align: 'center' });
-
-    doc.save(`MTC_${order.orderNo}.pdf`);
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   if (!order) {
@@ -169,11 +233,11 @@ export default function TrackOrder() {
             
             {prodProgress >= 100 ? (
                <button 
-                 onClick={generateMTC}
+                 onClick={handlePrintMTC}
                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
                >
-                 <Download className="h-4 w-4" />
-                 下载 MTC
+                 <Printer className="h-4 w-4" />
+                 打印 MTC
                </button>
             ) : (
               <div className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
@@ -218,10 +282,10 @@ export default function TrackOrder() {
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-bold text-gray-900 text-lg">{item.spec}</span>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium
-                    ${item.status === 'shipping_completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                    ${item.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                     {item.status === 'new' ? '等待生产' : 
                      item.status === 'production_completed' ? '待发运' :
-                     item.status === 'shipping_completed' ? '已完成' : '进行中'}
+                     item.status === 'completed' ? '已完成' : '进行中'}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">

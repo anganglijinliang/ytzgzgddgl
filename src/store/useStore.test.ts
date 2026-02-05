@@ -64,8 +64,8 @@ describe('Order System Store', () => {
 
     const updatedOrder = useStore.getState().orders[0];
     expect(updatedOrder.items[0].producedQuantity).toBe(5);
-    expect(updatedOrder.items[0].status).toBe('production_partial');
-    expect(updatedOrder.status).toBe('production_partial');
+    expect(updatedOrder.items[0].status).toBe('in_production');
+    expect(updatedOrder.status).toBe('in_production');
 
     // Complete production
     addProductionRecord({
@@ -119,7 +119,7 @@ describe('Order System Store', () => {
 
     const shippingOrder = useStore.getState().orders[0];
     expect(shippingOrder.items[0].shippedQuantity).toBe(5);
-    expect(shippingOrder.items[0].status).toBe('shipping_partial');
+    expect(shippingOrder.items[0].status).toBe('shipping_completed_production');
     
     // Ship rest
     addShippingRecord({
@@ -133,7 +133,7 @@ describe('Order System Store', () => {
 
     const completedOrder = useStore.getState().orders[0];
     expect(completedOrder.items[0].shippedQuantity).toBe(10);
-    expect(completedOrder.items[0].status).toBe('shipping_completed');
-    expect(completedOrder.status).toBe('shipping_completed');
+    expect(completedOrder.items[0].status).toBe('completed');
+    expect(completedOrder.status).toBe('completed');
   });
 });

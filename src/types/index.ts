@@ -19,7 +19,9 @@ export interface MasterData {
   warehouses: string[]; // 仓库
 }
 
-export type OrderStatus = 'new' | 'production_partial' | 'production_completed' | 'shipping_partial' | 'shipping_completed';
+export type ProductionProcess = 'pulling' | 'hydrostatic' | 'lining' | 'packaging';
+
+export type OrderStatus = 'new' | 'in_production' | 'shipping_during_production' | 'production_completed' | 'shipping_completed_production' | 'completed';
 
 export interface SubOrder {
   id: string;
@@ -36,7 +38,10 @@ export interface SubOrder {
   batchNo?: string; // 批次号 (Mock for MTC)
   
   // 实时计算字段
-  producedQuantity: number; // 已生产支数
+  producedQuantity: number; // 已生产支数 (成品/打包)
+  pullingQuantity?: number; // 拉管支数
+  hydrostaticQuantity?: number; // 水压支数
+  liningQuantity?: number; // 衬管支数
   shippedQuantity: number; // 已发运支数
   status: OrderStatus;
 }
@@ -74,6 +79,7 @@ export interface ProductionRecord {
   operatorId: string;
   timestamp: string;
   heatNo?: string; // 炉号
+  process?: ProductionProcess; // 工序
 }
 
 export interface ShippingRecord {

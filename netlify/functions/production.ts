@@ -23,6 +23,7 @@ export const handler = async (event, context) => {
           workshop: row.workshop,
           warehouse: row.warehouse,
           operatorId: row.operator_id,
+          process: row.process,
           heatNo: row.heat_no,
           timestamp: row.timestamp
         }));
@@ -35,14 +36,15 @@ export const handler = async (event, context) => {
       
       else if (httpMethod === 'POST') {
         const data = JSON.parse(body);
+        const process = data.process || 'packaging'; // Default to packaging (finished) if not specified
 
         await client.query('BEGIN');
 
         // Insert Record
         const result = await client.query(`
           INSERT INTO production_records (
-            order_id, sub_order_id, team, shift, quantity, workshop, warehouse, operator_id
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            order_id, sub_order_id, team, shift, quantity, workshop, warehouse, operator_id, heat_no, process
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           RETURNING id
         `, [
           data.orderId,
@@ -52,19 +54,55 @@ export const handler = async (event, context) => {
           data.quantity,
           data.workshop,
           data.warehouse,
-          data.operatorId
+          data.operatorId,
+          data.heatNo,
+          process
         ]);
 
-        // Update SubOrder produced_quantity
+        // Determine which column to update in sub_orders
+        let updateColumn = 'produced_quantity';
+        if (process === 'pulling') updateColumn = 'pulling_quantity';
+        else if (process === 'hydrostatic') updateColumn = 'hydrostatic_quantity';
+        else if (process === 'lining') updateColumn = 'lining_quantity';
+        // 'packaging' or others -> 'produced_quantity'
+
+        // Update SubOrder quantity
+        // Note: We use dynamic column name here, which is safe because we control the variable above
         await client.query(`
           UPDATE sub_orders 
-          SET produced_quantity = produced_quantity + $1,
-              status = CASE 
-                WHEN produced_quantity + $1 >= planned_quantity THEN 'production_completed'
-                ELSE 'production_partial'
-              END
+          SET ${updateColumn} = COALESCE(${updateColumn}, 0) + $1
           WHERE id = $2
         `, [data.quantity, data.subOrderId]);
+
+        // Update status logic
+        if (updateColumn === 'produced_quantity') {
+           await client.query(`
+            UPDATE sub_orders 
+            SET status = CASE 
+                  -- Completed Production
+                  WHEN produced_quantity >= planned_quantity THEN 
+                      CASE 
+                          WHEN COALESCE(shipped_quantity, 0) >= planned_quantity THEN 'completed'
+                          WHEN COALESCE(shipped_quantity, 0) > 0 THEN 'shipping_completed_production'
+                          ELSE 'production_completed'
+                      END
+                  -- Partial Production
+                  ELSE 
+                      CASE 
+                          WHEN COALESCE(shipped_quantity, 0) > 0 THEN 'shipping_during_production'
+                          ELSE 'in_production'
+                      END
+                END
+            WHERE id = $1
+          `, [data.subOrderId]);
+        } else {
+            // For intermediate processes (pulling, etc.), ensure it is at least 'in_production' if currently 'new'
+            await client.query(`
+                UPDATE sub_orders
+                SET status = 'in_production'
+                WHERE id = $1 AND status = 'new'
+            `, [data.subOrderId]);
+        }
 
         // Check if main Order status needs update (simplified logic: check if all items complete)
         // This is complex in SQL, usually better handled by a trigger or separate logic

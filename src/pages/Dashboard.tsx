@@ -93,7 +93,7 @@ export default function Dashboard() {
     },
     { 
       label: '未完成订单', 
-      value: orders.filter(o => o.status !== 'shipping_completed').length, 
+      value: orders.filter(o => o.status !== 'completed').length, 
       icon: AlertCircle,
       color: 'bg-red-500',
       textColor: 'text-red-500'
@@ -103,13 +103,14 @@ export default function Dashboard() {
   // Prepare Chart Data
   const orderStatusData = [
     { name: '新建', value: orders.filter(o => o.status === 'new').length },
-    { name: '生产中', value: orders.filter(o => o.status === 'production_partial').length },
+    { name: '生产中', value: orders.filter(o => o.status === 'in_production').length },
+    { name: '边生产边发运', value: orders.filter(o => o.status === 'shipping_during_production').length },
     { name: '生产完成', value: orders.filter(o => o.status === 'production_completed').length },
-    { name: '发运中', value: orders.filter(o => o.status === 'shipping_partial').length },
-    { name: '已完成', value: orders.filter(o => o.status === 'shipping_completed').length },
+    { name: '生产完发运中', value: orders.filter(o => o.status === 'shipping_completed_production').length },
+    { name: '已完成', value: orders.filter(o => o.status === 'completed').length },
   ].filter(d => d.value > 0);
 
-  const COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#64748b'];
+  const COLORS = ['#3b82f6', '#f59e0b', '#fb923c', '#10b981', '#6366f1', '#64748b'];
 
   return (
     <div className="space-y-6">
@@ -216,7 +217,7 @@ export default function Dashboard() {
                   <p className="text-xs text-gray-500">
                     {order.status === 'new' ? '新订单' : 
                      order.status === 'production_completed' ? '生产完成' : 
-                     order.status === 'shipping_completed' ? '已发运' : '处理中'}
+                     order.status === 'completed' ? '已完成' : '处理中'}
                   </p>
                 </div>
                 <span className="text-xs text-gray-400">{new Date(order.updatedAt).toLocaleDateString()}</span>

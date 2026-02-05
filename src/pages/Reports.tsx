@@ -40,7 +40,7 @@ export default function Reports() {
       const matchesStatus = statusFilter === 'all' 
         ? true 
         : statusFilter === 'completed' 
-          ? item.status === 'shipping_completed' || item.status === 'production_completed'
+          ? item.status === 'completed' || item.status === 'production_completed'
           : item.status === statusFilter;
 
       // Date Range
@@ -143,7 +143,9 @@ export default function Reports() {
            >
              <option value="all">全部状态</option>
              <option value="new">新建</option>
-             <option value="production_partial">生产中</option>
+             <option value="in_production">生产中</option>
+             <option value="shipping_during_production">边生产边发运</option>
+             <option value="production_completed">生产完成</option>
              <option value="completed">已完成</option>
            </select>
         </div>
@@ -218,10 +220,11 @@ export default function Reports() {
                   <td className="px-6 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                       ${item.status === 'new' ? 'bg-gray-100 text-gray-800' : 
-                        item.status.includes('completed') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        item.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                        item.status === 'production_completed' ? 'bg-teal-100 text-teal-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       {item.status === 'new' ? '未开始' : 
                        item.status === 'production_completed' ? '产完' :
-                       item.status === 'shipping_completed' ? '发完' : '进行中'}
+                       item.status === 'completed' ? '发完' : '进行中'}
                     </span>
                   </td>
                 </tr>

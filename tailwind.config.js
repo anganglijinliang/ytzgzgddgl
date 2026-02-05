@@ -6,6 +6,15 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          "Microsoft YaHei", 
+          "PingFang SC", 
+          "Hiragino Sans GB", 
+          "SimSun", 
+          "sans-serif"
+        ],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

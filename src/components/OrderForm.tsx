@@ -2,6 +2,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { Order } from '@/types';
 import { useStore } from '@/store/useStore';
 import { Plus, Trash2, Save, X } from 'lucide-react';
+import { getStandardWeight } from '@/constants/standards';
 
 interface OrderFormProps {
   initialData?: Order;
@@ -11,7 +12,7 @@ interface OrderFormProps {
 
 export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormProps) {
   const { masterData } = useStore();
-  const { register, control, handleSubmit, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: initialData || {
       orderNo: '',
       customerName: '',
@@ -31,11 +32,14 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
   });
 
   // Auto-complete helper
-  const DatalistInput = ({ name, options, placeholder, required = false }: any) => (
+  const DatalistInput = ({ name, options, placeholder, required = false, onChange }: any) => (
     <>
       <input
         list={`list-${name}`}
-        {...register(name, { required: required && "此项必填" })}
+        {...register(name, { 
+          required: required && "此项必填",
+          onChange: (e) => onChange && onChange(e.target.value)
+        })}
         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
         placeholder={placeholder}
       />
@@ -46,6 +50,32 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
       </datalist>
     </>
   );
+
+  // Watch for weight calculations
+  const handleSpecLevelChange = (index: number) => {
+    // Delay slightly to let form update
+    setTimeout(() => {
+        const item = watch(`items.${index}`);
+        if (item.spec && item.level) {
+            const unitWeightKg = getStandardWeight(item.spec, item.level);
+            if (unitWeightKg) {
+                setValue(`items.${index}.unitWeight`, unitWeightKg / 1000); // Convert kg to tons
+                if (item.plannedQuantity) {
+                    setValue(`items.${index}.totalWeight`, (unitWeightKg * item.plannedQuantity) / 1000);
+                }
+            }
+        }
+    }, 100);
+  };
+
+  const handleQuantityChange = (index: number) => {
+     setTimeout(() => {
+        const item = watch(`items.${index}`);
+        if (item.unitWeight && item.plannedQuantity) {
+             setValue(`items.${index}.totalWeight`, item.unitWeight * item.plannedQuantity);
+        }
+     }, 100);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -144,14 +174,25 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                     <Trash2 className="h-5 w-5" />
                   </button>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">规格</label>
-                      <DatalistInput name={`items.${index}.spec`} options={masterData.specs} placeholder="规格" required />
+                      <DatalistInput 
+                        name={`items.${index}.spec`} 
+                        options={masterData.specs} 
+                        placeholder="规格" 
+                        required 
+                        onChange={() => handleSpecLevelChange(index)}
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">级别</label>
-                      <DatalistInput name={`items.${index}.level`} options={masterData.levels} placeholder="级别" />
+                      <DatalistInput 
+                        name={`items.${index}.level`} 
+                        options={masterData.levels} 
+                        placeholder="级别" 
+                        onChange={() => handleSpecLevelChange(index)}
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">接口</label>
@@ -173,9 +214,35 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                       <label className="block text-xs font-medium text-gray-500 mb-1">计划支数 *</label>
                       <input
                         type="number"
-                        {...register(`items.${index}.plannedQuantity`, { required: true, min: 1 })}
+                        {...register(`items.${index}.plannedQuantity`, { 
+                          required: true, 
+                          min: 1,
+                          onChange: () => handleQuantityChange(index)
+                        })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">单重(吨)</label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        {...register(`items.${index}.unitWeight`)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 text-sm"
+                        placeholder="自动"
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">总重(吨)</label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        {...register(`items.${index}.totalWeight`)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 text-sm"
+                        placeholder="自动"
+                        readOnly
                       />
                     </div>
                   </div>

@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 import { QRCodeCanvas } from 'qrcode.react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 export default function Orders() {
@@ -82,29 +80,113 @@ export default function Orders() {
     XLSX.writeFile(wb, "orders_export.xlsx");
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    // Use a font that supports Chinese or just English for demo if font not loaded
-    // In real app, need to load custom font for Chinese support in jsPDF
-    doc.text("Order Report", 14, 15);
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <html>
+        <head>
+          <title>生产订单报表</title>
+          <style>
+            body { font-family: "Microsoft YaHei", "SimSun", sans-serif; padding: 20px; color: #333; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #005a9e; padding-bottom: 15px; }
+            .header h1 { margin: 0 0 10px 0; font-size: 24px; color: #005a9e; }
+            .header h2 { margin: 0; font-size: 18px; font-weight: normal; color: #666; }
+            .meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 12px; color: #666; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+            th { background-color: #f0f7ff; color: #005a9e; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .status { font-weight: bold; }
+            .status-new { color: #2563eb; }
+            .status-production { color: #d97706; }
+            .status-done { color: #059669; }
+            .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+            @media print {
+              .no-print { display: none; }
+              th { -webkit-print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>安钢集团永通球墨铸铁管有限责任公司</h1>
+            <h2>生产订单综合报表</h2>
+          </div>
+          <div class="meta">
+            <div>打印时间: ${new Date().toLocaleString('zh-CN')}</div>
+            <div>报表范围: ${searchTerm ? `搜索 "${searchTerm}"` : '所有订单'}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 10%">订单号</th>
+                <th style="width: 15%">客户</th>
+                <th style="width: 10%">交货日期</th>
+                <th style="width: 35%">产品明细 (规格/级别/数量)</th>
+                <th style="width: 10%">总进度</th>
+                <th style="width: 10%">状态</th>
+                <th style="width: 10%">备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orders.filter(o => 
+                o.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                o.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map(o => {
+                const totalPlan = o.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
+                const totalDone = o.items.reduce((acc, i) => acc + i.producedQuantity, 0);
+                const progress = totalPlan > 0 ? Math.round((totalDone / totalPlan) * 100) : 0;
+                
+                return `
+                <tr>
+                  <td><strong>${o.orderNo}</strong></td>
+                  <td>${o.customerName || '-'}</td>
+                  <td>${o.deliveryDate || '-'}</td>
+                  <td>
+                    <table style="margin: 0; border: none; width: 100%;">
+                      ${o.items.map(item => `
+                        <tr style="background: transparent;">
+                          <td style="border: none; padding: 2px 0;">
+                            ${item.spec} / ${item.level} / <span style="font-weight:bold">${item.plannedQuantity}支</span>
+                            <span style="color: #666; font-size: 11px;">(已产:${item.producedQuantity})</span>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </table>
+                  </td>
+                  <td>
+                    <div style="font-weight: bold; color: ${progress === 100 ? '#059669' : '#005a9e'}">${progress}%</div>
+                    <div style="font-size: 10px; color: #666;">${totalDone}/${totalPlan}</div>
+                  </td>
+                  <td class="status">
+                    ${
+                      o.status === 'new' ? '<span class="status-new">新建</span>' :
+                      o.status === 'in_production' ? '<span class="status-production">生产中</span>' :
+                      o.status === 'production_completed' ? '<span class="status-done">生产完成</span>' :
+                      o.status === 'completed' ? '<span class="status-done">已完成</span>' : 
+                      o.status === 'shipping_during_production' ? '<span class="status-production">边生产边发运</span>' :
+                      o.status === 'shipping_completed_production' ? '<span class="status-done">生产完成发运中</span>' : o.status
+                    }
+                  </td>
+                  <td style="font-size: 11px; color: #666;">${o.remarks || ''}</td>
+                </tr>
+              `}).join('')}
+            </tbody>
+          </table>
+          <div class="footer">
+            报表生成系统 - 内部使用
+          </div>
+        </body>
+      </html>
+    `;
     
-    const tableData = orders.flatMap(o => 
-      o.items.map(item => [
-        o.orderNo,
-        item.spec,
-        item.level,
-        String(item.plannedQuantity),
-        String(item.producedQuantity)
-      ])
-    );
-
-    autoTable(doc, {
-      head: [['Order No', 'Spec', 'Level', 'Plan', 'Done']],
-      body: tableData,
-      startY: 20,
-    });
-
-    doc.save("orders_report.pdf");
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   return (
@@ -133,7 +215,7 @@ export default function Orders() {
           <button onClick={exportExcel} className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100" title="导出 Excel">
             <FileSpreadsheet className="h-5 w-5" />
           </button>
-          <button onClick={exportPDF} className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100" title="导出 PDF">
+          <button onClick={handlePrint} className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100" title="打印报表">
             <Printer className="h-5 w-5" />
           </button>
         </div>
@@ -184,10 +266,17 @@ export default function Orders() {
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                           ${order.status === 'new' ? 'bg-blue-100 text-blue-800' : 
-                            order.status.includes('completed') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            order.status === 'in_production' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'shipping_during_production' ? 'bg-orange-100 text-orange-800' :
+                            order.status === 'production_completed' ? 'bg-teal-100 text-teal-800' :
+                            order.status === 'shipping_completed_production' ? 'bg-indigo-100 text-indigo-800' :
+                            order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                           {order.status === 'new' ? '新建' : 
+                           order.status === 'in_production' ? '生产中' :
+                           order.status === 'shipping_during_production' ? '边生产边发运' :
                            order.status === 'production_completed' ? '生产完成' :
-                           order.status === 'shipping_completed' ? '已发运' : '进行中'}
+                           order.status === 'shipping_completed_production' ? '生产已完成发运中' :
+                           order.status === 'completed' ? '已完成发运' : order.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
