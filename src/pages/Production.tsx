@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order } from '@/types';
-import { Factory, Save, Search, CheckCircle2, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Factory, Save, Search, CheckCircle2, ShieldCheck, AlertTriangle, Monitor, LayoutGrid } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/context/ToastContext';
@@ -11,15 +11,24 @@ export default function Production() {
   const { showToast } = useToast();
   const [selectedOrderNo, setSelectedOrderNo] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [isWorkshopMode, setIsWorkshopMode] = React.useState(false); // Toggle for Workshop Mode
   
-  // Form State
+  // Form State - Initialize from localStorage if available
   const [selectedSubOrder, setSelectedSubOrder] = React.useState<string>('');
   const [quantity, setQuantity] = React.useState<number>(0);
-  const [team, setTeam] = React.useState<string>('甲班');
-  const [shift, setShift] = React.useState<string>('白班');
-  const [workshop, setWorkshop] = React.useState<string>('一车间');
+  const [team, setTeam] = React.useState<string>(localStorage.getItem('prod_team') || '甲班');
+  const [shift, setShift] = React.useState<string>(localStorage.getItem('prod_shift') || '白班');
+  const [workshop, setWorkshop] = React.useState<string>(localStorage.getItem('prod_workshop') || '一车间');
   const [heatNo, setHeatNo] = React.useState<string>('');
-  const [process, setProcess] = React.useState<string>('pulling');
+  const [process, setProcess] = React.useState<string>(localStorage.getItem('prod_process') || 'pulling');
+
+  // Persist settings when changed
+  React.useEffect(() => {
+    localStorage.setItem('prod_team', team);
+    localStorage.setItem('prod_shift', shift);
+    localStorage.setItem('prod_workshop', workshop);
+    localStorage.setItem('prod_process', process);
+  }, [team, shift, workshop, process]);
   
   const canOperate = currentUser?.role === 'admin' || currentUser?.role === 'production';
 
@@ -74,6 +83,158 @@ export default function Production() {
     return <LoadingSpinner />;
   }
 
+  // --- Workshop Mode Render ---
+  if (isWorkshopMode) {
+    return (
+      <div className="h-[calc(100vh-100px)] flex flex-col bg-gray-50 -m-4 p-4">
+        {/* Header Bar */}
+        <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm">
+          <div className="flex items-center gap-4">
+             <button 
+               onClick={() => setIsWorkshopMode(false)}
+               className="p-3 bg-gray-100 rounded-lg hover:bg-gray-200"
+             >
+               <LayoutGrid className="h-6 w-6 text-gray-600" />
+             </button>
+             <div>
+               <h1 className="text-2xl font-bold text-gray-900">车间触屏模式</h1>
+               <div className="flex gap-2 text-sm text-gray-500">
+                 <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{workshop}</span>
+                 <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded">{team}</span>
+                 <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded">{shift}</span>
+               </div>
+             </div>
+          </div>
+          <div className="text-right">
+             <div className="text-3xl font-bold text-blue-600">{productionRecords.filter(r => r.timestamp.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0)}</div>
+             <div className="text-xs text-gray-400">今日累计产量</div>
+          </div>
+        </div>
+
+        <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
+          {/* Left: Order Selection & Status */}
+          <div className="col-span-4 bg-white rounded-xl shadow-sm p-4 overflow-y-auto flex flex-col gap-4">
+             <div>
+               <label className="block text-sm font-bold text-gray-700 mb-2">当前工序</label>
+               <div className="grid grid-cols-2 gap-2">
+                  {[
+                      { id: 'pulling', label: '离心浇铸' },
+                      { id: 'hydrostatic', label: '水压试验' },
+                      { id: 'lining', label: '内衬工序' },
+                      { id: 'packaging', label: '打包入库' }
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setProcess(p.id)}
+                      className={`py-3 text-lg font-bold rounded-lg transition-all ${process === p.id ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600'}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+               </div>
+             </div>
+
+             <div className="flex-1">
+               <label className="block text-sm font-bold text-gray-700 mb-2">选择订单</label>
+               <div className="space-y-2">
+                 {orders.filter(o => !['completed'].includes(o.status)).map(o => (
+                   <button
+                     key={o.id}
+                     onClick={() => { setSelectedOrderNo(o.orderNo); setSelectedOrder(o); setSelectedSubOrder(''); }}
+                     className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selectedOrder?.id === o.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-100 hover:bg-gray-50'}`}
+                   >
+                     <div className="font-bold text-lg">{o.orderNo}</div>
+                     <div className="text-sm text-gray-500">{o.customerName}</div>
+                   </button>
+                 ))}
+               </div>
+             </div>
+          </div>
+
+          {/* Middle: Specs Selection */}
+          <div className="col-span-5 bg-white rounded-xl shadow-sm p-4 overflow-y-auto">
+             <label className="block text-sm font-bold text-gray-700 mb-2">选择规格 (点击选中)</label>
+             {!selectedOrder ? (
+               <div className="text-gray-400 text-center mt-20">请先选择左侧订单</div>
+             ) : (
+               <div className="grid grid-cols-1 gap-3">
+                 {selectedOrder.items.map(item => (
+                   <button
+                     key={item.id}
+                     onClick={() => setSelectedSubOrder(item.id)}
+                     className={`p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden ${selectedSubOrder === item.id ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-100 hover:bg-gray-50'}`}
+                   >
+                     <div className="flex justify-between items-center z-10 relative">
+                       <span className="text-2xl font-bold text-gray-800">{item.spec}</span>
+                       <span className="text-xl font-medium text-gray-600">{item.level}</span>
+                     </div>
+                     <div className="text-sm text-gray-500 mt-1 z-10 relative">{item.interfaceType} | {item.length}</div>
+                     
+                     {/* Progress Background */}
+                     <div 
+                        className="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-500" 
+                        style={{ width: `${Math.min((item.producedQuantity / item.plannedQuantity) * 100, 100)}%` }} 
+                     />
+                   </button>
+                 ))}
+               </div>
+             )}
+          </div>
+
+          {/* Right: Operation Panel */}
+          <div className="col-span-3 bg-white rounded-xl shadow-sm p-4 flex flex-col gap-4">
+             {process === 'pulling' && (
+               <div>
+                 <label className="block text-sm font-bold text-red-600 mb-1">炉号 (Heat No)</label>
+                 <input 
+                    type="text" 
+                    value={heatNo}
+                    onChange={e => setHeatNo(e.target.value)}
+                    className="w-full text-2xl font-mono p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none uppercase"
+                    placeholder="输入炉号"
+                 />
+               </div>
+             )}
+
+             <div className="flex-1 flex flex-col justify-center gap-4">
+               <div className="text-center">
+                 <div className="text-sm text-gray-500 mb-1">本次录入数量</div>
+                 <div className="text-6xl font-black text-gray-900">{quantity}</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3">
+                 {[1, 5, 10, 20].map(num => (
+                   <button 
+                     key={num}
+                     onClick={() => setQuantity(num)}
+                     className={`py-4 text-xl font-bold rounded-xl border-2 transition-all ${quantity === num ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 text-gray-700 hover:border-blue-400'}`}
+                   >
+                     +{num}
+                   </button>
+                 ))}
+                 <button 
+                    onClick={() => setQuantity(0)}
+                    className="col-span-2 py-2 text-red-500 font-bold hover:bg-red-50 rounded-lg"
+                 >
+                   重置
+                 </button>
+               </div>
+             </div>
+
+             <button
+               onClick={handleSubmit}
+               disabled={!selectedSubOrder || quantity <= 0 || (process === 'pulling' && !heatNo) || isLoading}
+               className="w-full py-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-2xl font-bold rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
+             >
+               {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Save className="h-8 w-8" />}
+               确认提交
+             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
       {/* Left: Entry Form */}
@@ -83,10 +244,17 @@ export default function Production() {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Factory className="h-6 w-6 text-blue-600" />
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-800">生产报工 (MES)</h2>
               <p className="text-xs text-gray-500">录入生产实绩与质量追溯信息</p>
             </div>
+            <button
+              onClick={() => setIsWorkshopMode(true)}
+              className="flex items-center gap-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
+            >
+              <Monitor className="h-4 w-4" />
+              切换触屏模式
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
