@@ -78,10 +78,10 @@ export default function Production() {
     if (!selectedOrder || !selectedSubOrder || quantity <= 0) return;
 
     // Expert Validation
-    if (process === 'pulling' && !heatNo.trim()) {
-      showToast('质量管控要求：离心浇铸工序必须录入炉号 (Heat No)！', 'error');
-      return;
-    }
+    // if (process === 'pulling' && !heatNo.trim()) {
+    //   showToast('质量管控要求：离心浇铸工序必须录入炉号 (Heat No)！', 'error');
+    //   return;
+    // }
 
     const success = await addProductionRecord({
       orderId: selectedOrder.id,
@@ -243,10 +243,10 @@ export default function Production() {
         if (!selectedOrder || !selectedSubOrder || quantity <= 0) return;
         
         // Expert Validation
-        if (process === 'pulling' && !heatNo.trim()) {
-          showToast('必须录入炉号 (Heat No)！', 'error');
-          return;
-        }
+        // if (process === 'pulling' && !heatNo.trim()) {
+        //   showToast('必须录入炉号 (Heat No)！', 'error');
+        //   return;
+        // }
 
         const success = await addProductionRecord({
           orderId: selectedOrder.id,
@@ -296,7 +296,7 @@ export default function Production() {
              </div>
           </div>
           <div className="text-right">
-             <div className="text-3xl font-bold text-blue-600">{productionRecords.filter(r => r.timestamp.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0)}</div>
+             <div className="text-3xl font-bold text-blue-600">{productionRecords.filter(r => r.timestamp?.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0)}</div>
              <div className="text-xs text-gray-400">今日累计产量</div>
           </div>
         </div>
@@ -428,7 +428,7 @@ export default function Production() {
 
              <button
                onClick={handleWorkshopSubmit}
-               disabled={!selectedSubOrder || quantity <= 0 || (process === 'pulling' && !heatNo) || isLoading}
+               disabled={!selectedSubOrder || quantity <= 0 || isLoading}
                className="w-full py-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-2xl font-bold rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
              >
                {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Save className="h-8 w-8" />}
@@ -626,7 +626,7 @@ export default function Production() {
 
                 <button
                   type="submit"
-                  disabled={!selectedSubOrder || quantity <= 0 || (process === 'pulling' && !heatNo) || isLoading}
+                  disabled={!selectedSubOrder || quantity <= 0 || isLoading}
                   className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
                 >
                   {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}

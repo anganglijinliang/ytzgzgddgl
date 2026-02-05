@@ -241,6 +241,16 @@ export const useStore = create<AppState>()(
 
       deleteUser: async (id) => {
         set({ isLoading: true });
+        
+        // Handle mock users (client-side only deletion)
+        if (id.startsWith('mock-')) {
+          set(state => ({
+            users: state.users.filter(u => u.id !== id),
+            isLoading: false
+          }));
+          return true;
+        }
+
         try {
           const response = await fetch(`/.netlify/functions/users?id=${id}`, {
             method: 'DELETE',
