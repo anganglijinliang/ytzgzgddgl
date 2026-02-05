@@ -200,7 +200,7 @@ export default function Production() {
        ) : (
          activePlans.map(plan => {
            const order = orders.find(o => o.id === plan.orderId);
-           const item = order?.items.find(i => i.id === plan.subOrderId);
+           const item = (order?.items || []).find(i => i.id === plan.subOrderId);
            if (!order || !item) return null;
            
            const isSelected = selectedPlanId === plan.id;
@@ -383,7 +383,7 @@ export default function Production() {
                </div>
              ) : (
                <div className="grid grid-cols-1 gap-3">
-                 {selectedOrder.items.map(item => (
+                 {(selectedOrder.items || []).map(item => (
                    <button
                      key={item.id}
                      onClick={() => setSelectedSubOrder(item.id)}
@@ -519,7 +519,7 @@ export default function Production() {
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
                   <p className="text-sm text-blue-800 font-medium">当前订单: {selectedOrder.customerName || '无客户信息'}</p>
                   <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {selectedOrder.items.map(item => (
+                    {(selectedOrder.items || []).map(item => (
                       <div 
                         key={item.id}
                         onClick={() => setSelectedSubOrder(item.id)}

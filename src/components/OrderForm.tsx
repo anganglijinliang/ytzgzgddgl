@@ -1,7 +1,7 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Order } from '@/types';
 import { useStore } from '@/store/useStore';
-import { Plus, Trash2, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, X, Loader2, ChevronDown } from 'lucide-react';
 import { getStandardWeight } from '@/constants/standards';
 
 interface OrderFormProps {
@@ -31,16 +31,16 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
     name: "items"
   });
 
-  // Auto-complete helper
+  // Auto-complete helper with Mobile support
   const DatalistInput = ({ name, options, placeholder, required = false, onChange }: any) => (
-    <>
+    <div className="relative">
       <input
         list={`list-${name}`}
         {...register(name, { 
           required: required && "此项必填",
           onChange: (e) => onChange && onChange(e.target.value)
         })}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
         placeholder={placeholder}
       />
       <datalist id={`list-${name}`}>
@@ -48,7 +48,26 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
           <option key={opt} value={opt} />
         ))}
       </datalist>
-    </>
+      
+      {/* Mobile-friendly Dropdown Trigger */}
+      <div className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer bg-gray-50 border-l border-gray-200 rounded-r-md hover:bg-gray-100">
+        <ChevronDown className="h-4 w-4 text-gray-500" />
+        <select
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={(e) => {
+            const val = e.target.value;
+            setValue(name, val, { shouldValidate: true, shouldDirty: true });
+            if (onChange) onChange(val);
+          }}
+          value="" // Always reset to allow selecting the same value or just to show placeholder? Actually value should be current value but we can't easily track it here without watch. Keep it empty to treat as a "picker".
+        >
+          <option value="" disabled>选择...</option>
+          {options.map((opt: string) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 
   // Watch for weight calculations
