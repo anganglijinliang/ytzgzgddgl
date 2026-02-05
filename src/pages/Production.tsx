@@ -7,7 +7,12 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/context/ToastContext';
 
 export default function Production() {
-  const { orders, addProductionRecord, productionRecords, currentUser, isLoading, plans, addPlan, updatePlan } = useStore();
+  const { orders: rawOrders, addProductionRecord, productionRecords: rawRecords, currentUser, isLoading, plans: rawPlans, addPlan, updatePlan } = useStore();
+  
+  // Defensive checks for data types - Prevents blank screen if store data is corrupted/loading
+  const orders = Array.isArray(rawOrders) ? rawOrders : [];
+  const productionRecords = Array.isArray(rawRecords) ? rawRecords : [];
+  const plans = Array.isArray(rawPlans) ? rawPlans : [];
   const { showToast } = useToast();
   
   // UI State
@@ -120,6 +125,7 @@ export default function Production() {
       return;
     }
     const randomOrder = validOrders[Math.floor(Math.random() * validOrders.length)];
+    if (!randomOrder.items || randomOrder.items.length === 0) return;
     const randomItem = randomOrder.items[0];
     
     await addPlan({
@@ -135,8 +141,9 @@ export default function Production() {
     showToast('已生成测试派工单', 'success');
   };
 
-  const activePlans = plans.filter(p => p.status === 'pending');
-  const recentRecords = productionRecords.slice(0, 10); // Simple recent records for now
+  const activePlans = (Array.isArray(plans) ? plans : []).filter(p => p && p.status === 'pending');
+  const safeRecords = Array.isArray(productionRecords) ? productionRecords : [];
+  const recentRecords = safeRecords.slice(0, 10); // Simple recent records for now
 
   if (!canOperate) return <div className="p-8 text-center text-gray-500">您没有权限访问此模块</div>;
   if (isLoading && orders.length === 0) return <LoadingSpinner />;
@@ -296,7 +303,11 @@ export default function Production() {
              </div>
           </div>
           <div className="text-right">
-             <div className="text-3xl font-bold text-blue-600">{productionRecords.filter(r => r.timestamp?.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0)}</div>
+             <div className="text-3xl font-bold text-blue-600">
+               {productionRecords
+                 .filter(r => r && r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0]))
+                 .reduce((acc, cur) => acc + (cur.quantity || 0), 0)}
+             </div>
              <div className="text-xs text-gray-400">今日累计产量</div>
           </div>
         </div>
