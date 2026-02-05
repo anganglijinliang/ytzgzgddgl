@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'order_entry' | 'production' | 'shipping';
+export type UserRole = 'admin' | 'order_entry' | 'production' | 'shipping' | 'operator';
 
 export interface User {
   id: string;
@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  createdAt?: string;
 }
 
 // 规格、级别等基础数据，用于智能记忆下拉

@@ -82,14 +82,16 @@ export default function Users() {
     admin: '系统管理员',
     order_entry: '订单录入员',
     production: '生产主管',
-    shipping: '发运主管'
+    shipping: '发运主管',
+    operator: '操作员'
   };
 
   const roleColors: Record<UserRole, string> = {
     admin: 'bg-purple-100 text-purple-800',
     order_entry: 'bg-blue-100 text-blue-800',
     production: 'bg-orange-100 text-orange-800',
-    shipping: 'bg-green-100 text-green-800'
+    shipping: 'bg-green-100 text-green-800',
+    operator: 'bg-gray-100 text-gray-800'
   };
 
   return (
