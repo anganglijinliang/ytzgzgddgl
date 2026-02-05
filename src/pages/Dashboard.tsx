@@ -13,6 +13,7 @@ import {
   CartesianGrid
 } from 'recharts';
 import { FileText, Factory, Truck, AlertCircle, Activity, Layers } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function Dashboard() {
   const { orders, productionRecords, shippingRecords, isLoading } = useStore();
@@ -157,7 +158,7 @@ export default function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {orderStatusData.map((entry, index) => (
+                  {orderStatusData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

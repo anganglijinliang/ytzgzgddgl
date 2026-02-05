@@ -1,7 +1,7 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Order } from '@/types';
 import { useStore } from '@/store/useStore';
-import { Plus, Trash2, Save, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, X, Loader2 } from 'lucide-react';
 import { getStandardWeight } from '@/constants/standards';
 
 interface OrderFormProps {

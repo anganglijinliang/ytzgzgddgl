@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { FileDown, Printer, Search } from 'lucide-react';
+import { FileDown, Printer, Search, Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
