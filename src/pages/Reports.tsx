@@ -1,14 +1,22 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { FileDown, Printer, Search } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useToast } from '@/context/ToastContext';
 
 export default function Reports() {
-  const { orders, productionRecords } = useStore();
+  const { orders, productionRecords, isLoading } = useStore();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = React.useState<'orders' | 'efficiency'>('orders');
+  const [isExporting, setIsExporting] = React.useState(false);
+
+  if (isLoading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
   
   // Filter States
   const [dateRange, setDateRange] = React.useState({ start: '', end: '' });
@@ -58,47 +66,67 @@ export default function Reports() {
     });
   }, [flattenedData, searchQuery, statusFilter, dateRange]);
 
-  const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredData.map(item => ({
-      订单号: item.orderNo,
-      客户: item.customerName,
-      规格: item.spec,
-      级别: item.level,
-      接口: item.interfaceType,
-      内衬: item.lining,
-      防腐: item.coating,
-      长度: item.length,
-      计划支数: item.plannedQuantity,
-      已产支数: item.producedQuantity,
-      已发支数: item.shippedQuantity,
-      状态: item.status,
-      交货日期: item.deliveryDate
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Report");
-    XLSX.writeFile(wb, `report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const exportExcel = async () => {
+    setIsExporting(true);
+    await new Promise(resolve => setTimeout(resolve, 100)); // Allow UI to update
+    try {
+      const ws = XLSX.utils.json_to_sheet(filteredData.map(item => ({
+        订单号: item.orderNo,
+        客户: item.customerName,
+        规格: item.spec,
+        级别: item.level,
+        接口: item.interfaceType,
+        内衬: item.lining,
+        防腐: item.coating,
+        长度: item.length,
+        计划支数: item.plannedQuantity,
+        已产支数: item.producedQuantity,
+        已发支数: item.shippedQuantity,
+        状态: item.status,
+        交货日期: item.deliveryDate
+      })));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Report");
+      XLSX.writeFile(wb, `report_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showToast('Excel 导出成功', 'success');
+    } catch (error) {
+      console.error("Export Excel failed:", error);
+      showToast('Excel 导出失败', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Production & Shipping Report", 14, 15);
-    
-    const tableData = filteredData.map(item => [
-      item.orderNo,
-      item.spec,
-      String(item.plannedQuantity),
-      String(item.producedQuantity),
-      String(item.shippedQuantity),
-      item.status
-    ]);
+  const exportPDF = async () => {
+    setIsExporting(true);
+    await new Promise(resolve => setTimeout(resolve, 100)); // Allow UI to update
+    try {
+      const doc = new jsPDF();
+      doc.text("Production & Shipping Report", 14, 15);
+      
+      const tableData = filteredData.map(item => [
+        item.orderNo,
+        item.spec,
+        String(item.plannedQuantity),
+        String(item.producedQuantity),
+        String(item.shippedQuantity),
+        item.status
+      ]);
 
-    autoTable(doc, {
-      head: [['Order', 'Spec', 'Plan', 'Prod', 'Ship', 'Status']],
-      body: tableData,
-      startY: 20,
-    });
+      autoTable(doc, {
+        head: [['Order', 'Spec', 'Plan', 'Prod', 'Ship', 'Status']],
+        body: tableData,
+        startY: 20,
+      });
 
-    doc.save("report.pdf");
+      doc.save("report.pdf");
+      showToast('PDF 导出成功', 'success');
+    } catch (error) {
+      console.error("Export PDF failed:", error);
+      showToast('PDF 导出失败', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Stats for Efficiency
@@ -160,11 +188,19 @@ export default function Reports() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={exportExcel} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
-            <FileDown className="h-4 w-4" /> 导出 Excel
+          <button 
+            onClick={exportExcel} 
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />} 导出 Excel
           </button>
-          <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
-            <Printer className="h-4 w-4" /> 导出 PDF
+          <button 
+            onClick={exportPDF} 
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />} 导出 PDF
           </button>
         </div>
       </div>

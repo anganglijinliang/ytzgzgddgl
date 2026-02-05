@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { User, UserRole } from '@/types';
-import { Plus, Edit2, Trash2, X, Check, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, Search, Loader2 } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/context/ToastContext';
 import { clsx } from 'clsx';
 
 export default function Users() {
-  const { users, fetchUsers, addUser, updateUser, deleteUser, currentUser } = useStore();
+  const { users, fetchUsers, addUser, updateUser, deleteUser, currentUser, isLoading } = useStore();
+  const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   
+  // Local state to track which user is being deleted (optional, but nice for specific feedback)
+  // However, since useStore has a global isLoading, we'll stick to disabling all actions.
+
   const [formData, setFormData] = useState<{
     username: string;
     name: string;
@@ -26,23 +32,33 @@ export default function Users() {
     fetchUsers();
   }, [fetchUsers]);
 
+  if (isLoading && users.length === 0) {
+    return <LoadingSpinner />;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    let success = false;
     if (editingUser) {
-      await updateUser(editingUser.id, formData);
+      success = await updateUser(editingUser.id, formData);
     } else {
-      await addUser(formData);
+      success = await addUser(formData);
     }
     
-    setIsModalOpen(false);
-    setEditingUser(null);
-    setFormData({
-      username: '',
-      name: '',
-      role: 'order_entry',
-      avatar: ''
-    });
+    if (success) {
+      showToast(editingUser ? '用户更新成功' : '用户创建成功', 'success');
+      setIsModalOpen(false);
+      setEditingUser(null);
+      setFormData({
+        username: '',
+        name: '',
+        role: 'order_entry',
+        avatar: ''
+      });
+    } else {
+      showToast('操作失败', 'error');
+    }
   };
 
   const handleEdit = (user: User) => {
@@ -58,7 +74,12 @@ export default function Users() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('确定要删除此用户吗？')) {
-      await deleteUser(id);
+      const success = await deleteUser(id);
+      if (success) {
+        showToast('用户删除成功', 'success');
+      } else {
+        showToast('删除失败', 'error');
+      }
     }
   };
 
@@ -103,9 +124,10 @@ export default function Users() {
         </div>
         <button
           onClick={openNewUserModal}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Plus className="h-4 w-4" />
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           新增用户
         </button>
       </div>
@@ -157,7 +179,8 @@ export default function Users() {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => handleEdit(user)}
-                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                        disabled={isLoading}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="编辑"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -165,10 +188,11 @@ export default function Users() {
                       {currentUser?.id !== user.id && ( // Prevent deleting yourself
                         <button 
                           onClick={() => handleDelete(user.id)}
-                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          disabled={isLoading}
+                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="删除"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         </button>
                       )}
                     </div>
@@ -261,10 +285,11 @@ export default function Users() {
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Check className="h-4 w-4" />
-                  保存
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {isLoading ? '保存中...' : '保存'}
                 </button>
               </div>
             </form>

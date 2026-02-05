@@ -15,9 +15,9 @@ interface AppState {
   
   // User Actions
   fetchUsers: () => Promise<void>;
-  addUser: (user: Omit<User, 'id'>) => Promise<void>;
-  updateUser: (id: string, data: Partial<User>) => Promise<void>;
-  deleteUser: (id: string) => Promise<void>;
+  addUser: (user: Omit<User, 'id'>) => Promise<boolean>;
+  updateUser: (id: string, data: Partial<User>) => Promise<boolean>;
+  deleteUser: (id: string) => Promise<boolean>;
   
   // Actions
   login: (username: string, password?: string) => Promise<boolean>;
@@ -25,12 +25,12 @@ interface AppState {
   
   fetchInitialData: () => Promise<void>;
   
-  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<void>;
+  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<boolean>;
   updateOrder: (id: string, data: Partial<Order>) => void; // Keeping sync for now, should be async later
-  deleteOrder: (id: string) => Promise<void>;
+  deleteOrder: (id: string) => Promise<boolean>;
   
-  addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'>) => Promise<void>;
-  addShippingRecord: (record: Omit<ShippingRecord, 'id' | 'timestamp'>) => Promise<void>;
+  addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'>) => Promise<boolean>;
+  addShippingRecord: (record: Omit<ShippingRecord, 'id' | 'timestamp'>) => Promise<boolean>;
   
   // Helper to update master data automatically
   updateMasterData: (key: keyof MasterData, value: string) => void;
@@ -140,32 +140,44 @@ export const useStore = create<AppState>()(
       },
 
       fetchUsers: async () => {
+        set({ isLoading: true });
         try {
           const response = await fetch('/.netlify/functions/users');
           if (response.ok) {
             const users = await response.json();
-            set({ users });
+            set({ users, isLoading: false });
+          } else {
+            set({ isLoading: false });
           }
         } catch (error) {
           console.error('Failed to fetch users:', error);
+          set({ isLoading: false });
         }
       },
 
       addUser: async (userData) => {
+        set({ isLoading: true });
         try {
           const response = await fetch('/.netlify/functions/users', {
             method: 'POST',
             body: JSON.stringify(userData),
           });
           if (response.ok) {
-            await get().fetchUsers();
+            await get().fetchUsers(); 
+            return true;
+          } else {
+            set({ isLoading: false });
+            return false;
           }
         } catch (error) {
           console.error('Failed to add user:', error);
+          set({ isLoading: false });
+          return false;
         }
       },
 
       updateUser: async (id, data) => {
+        set({ isLoading: true });
         try {
           const response = await fetch('/.netlify/functions/users', {
             method: 'PUT',
@@ -173,22 +185,35 @@ export const useStore = create<AppState>()(
           });
           if (response.ok) {
             await get().fetchUsers();
+            return true;
+          } else {
+             set({ isLoading: false });
+             return false;
           }
         } catch (error) {
           console.error('Failed to update user:', error);
+          set({ isLoading: false });
+          return false;
         }
       },
 
       deleteUser: async (id) => {
+        set({ isLoading: true });
         try {
           const response = await fetch(`/.netlify/functions/users?id=${id}`, {
             method: 'DELETE',
           });
           if (response.ok) {
             await get().fetchUsers();
+            return true;
+          } else {
+             set({ isLoading: false });
+             return false;
           }
         } catch (error) {
           console.error('Failed to delete user:', error);
+          set({ isLoading: false });
+          return false;
         }
       },
 
@@ -237,10 +262,12 @@ export const useStore = create<AppState>()(
             updateMasterData('coatings', item.coating);
           });
           if (orderData.warehouse) updateMasterData('warehouses', orderData.warehouse);
-
+          
+          return true;
         } catch (error) {
            console.error('Add Order Error:', error);
            set({ error: 'Failed to save order to database', isLoading: false });
+           return false;
         }
       },
 
@@ -251,16 +278,21 @@ export const useStore = create<AppState>()(
       },
 
       deleteOrder: async (id) => {
-    try {
-      await fetch(`/.netlify/functions/orders?id=${id}`, { method: 'DELETE' });
-      // Optimistic update
-      set(state => ({
-        orders: state.orders.filter(o => o.id !== id)
-      }));
-    } catch (error) {
-      console.error('Failed to delete order:', error);
-    }
-  },
+        set({ isLoading: true });
+        try {
+          await fetch(`/.netlify/functions/orders?id=${id}`, { method: 'DELETE' });
+          // Optimistic update
+          set(state => ({
+            orders: state.orders.filter(o => o.id !== id),
+            isLoading: false
+          }));
+          return true;
+        } catch (error) {
+          console.error('Failed to delete order:', error);
+          set({ isLoading: false });
+          return false;
+        }
+      },
 
       addProductionRecord: async (record) => {
         set({ isLoading: true });
@@ -271,9 +303,11 @@ export const useStore = create<AppState>()(
             });
             if (!response.ok) throw new Error('Failed to save production record');
             await get().fetchInitialData();
+            return true;
         } catch (error) {
             console.error(error);
             set({ error: 'Failed to save production record', isLoading: false });
+            return false;
         }
       },
 
@@ -286,9 +320,11 @@ export const useStore = create<AppState>()(
             });
             if (!response.ok) throw new Error('Failed to save shipping record');
             await get().fetchInitialData();
+            return true;
         } catch (error) {
              console.error(error);
              set({ error: 'Failed to save shipping record', isLoading: false });
+             return false;
         }
       },
 

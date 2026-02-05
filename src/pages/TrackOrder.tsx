@@ -1,12 +1,17 @@
 import { useParams } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { Factory, Truck, Package, Calendar, FileText, Printer } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function TrackOrder() {
   const { orderId } = useParams();
-  const { orders } = useStore();
+  const { orders, isLoading } = useStore();
   
   const order = orders.find(o => o.id === orderId);
+
+  if (isLoading && !order) {
+    return <LoadingSpinner />;
+  }
 
   const handlePrintMTC = () => {
     if (!order) return;

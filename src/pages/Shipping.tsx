@@ -1,10 +1,13 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order } from '@/types';
-import { Truck, Save, Search, CheckCircle2 } from 'lucide-react';
+import { Truck, Save, Search, CheckCircle2, Loader2 } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/context/ToastContext';
 
 export default function Shipping() {
-  const { orders, addShippingRecord, shippingRecords, currentUser, masterData } = useStore();
+  const { orders, addShippingRecord, shippingRecords, currentUser, masterData, isLoading } = useStore();
+  const { showToast } = useToast();
   const [selectedOrderNo, setSelectedOrderNo] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   
@@ -33,7 +36,7 @@ export default function Shipping() {
     }
   }, [selectedOrderNo, orders]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrder || !selectedSubOrder || quantity <= 0) return;
 
@@ -45,7 +48,7 @@ export default function Shipping() {
       }
     }
 
-    addShippingRecord({
+    const success = await addShippingRecord({
       orderId: selectedOrder.id,
       subOrderId: selectedSubOrder,
       quantity: Number(quantity),
@@ -57,13 +60,21 @@ export default function Shipping() {
       operatorId: currentUser?.id || 'unknown'
     });
 
-    alert('发运记录已提交');
-    setQuantity(0);
+    if (success) {
+      showToast('发运记录已提交', 'success');
+      setQuantity(0);
+    } else {
+      showToast('提交失败，请重试', 'error');
+    }
   };
 
   const recentRecords = shippingRecords.slice(0, 10);
 
   if (!canOperate) return <div className="p-8 text-center text-gray-500">您没有权限访问此模块</div>;
+
+  if (isLoading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
@@ -203,11 +214,11 @@ export default function Shipping() {
 
             <button
               type="submit"
-              disabled={!selectedOrder || !selectedSubOrder || quantity <= 0}
+              disabled={!selectedOrder || !selectedSubOrder || quantity <= 0 || isLoading}
               className="w-full bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
             >
-              <Save className="h-5 w-5" />
-              确认发运
+              {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+              {isLoading ? '提交中...' : '确认发运'}
             </button>
           </form>
         </div>

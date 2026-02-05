@@ -268,9 +268,9 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isLoading}
-            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg shadow-blue-600/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} 
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {isLoading ? '保存中...' : '保存订单'}
           </button>
         </div>

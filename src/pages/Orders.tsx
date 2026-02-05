@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order } from '@/types';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { 
   Plus, 
   Search, 
@@ -11,7 +12,8 @@ import {
   QrCode, 
   FileSpreadsheet,
   Printer,
-  Upload
+  Upload,
+  Loader2
 } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -19,7 +21,7 @@ import * as XLSX from 'xlsx';
 import { useToast } from '@/context/ToastContext';
 
 export default function Orders() {
-  const { orders, addOrder, updateOrder, deleteOrder, currentUser } = useStore();
+  const { orders, addOrder, updateOrder, deleteOrder, currentUser, isLoading } = useStore();
   const { showToast } = useToast();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingOrder, setEditingOrder] = React.useState<Order | undefined>(undefined);
@@ -120,12 +122,18 @@ export default function Orders() {
         // Optimistic update handled by store, but if we had async updateOrder:
         updateOrder(editingOrder.id, data);
         showToast('订单更新成功', 'success');
+        setIsFormOpen(false);
+        setEditingOrder(undefined);
       } else {
-        await addOrder(data);
-        showToast('订单创建成功', 'success');
+        const success = await addOrder(data);
+        if (success) {
+          showToast('订单创建成功', 'success');
+          setIsFormOpen(false);
+          setEditingOrder(undefined);
+        } else {
+          showToast('创建失败，请重试', 'error');
+        }
       }
-      setIsFormOpen(false);
-      setEditingOrder(undefined);
     } catch (error) {
       showToast('操作失败', 'error');
     }
@@ -136,10 +144,14 @@ export default function Orders() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('确定要删除此订单吗？')) {
-      deleteOrder(id);
-      showToast('订单删除成功', 'success');
+      const success = await deleteOrder(id);
+      if (success) {
+        showToast('订单删除成功', 'success');
+      } else {
+        showToast('订单删除失败', 'error');
+      }
     }
   };
 
@@ -274,6 +286,10 @@ export default function Orders() {
     }, 500);
   };
 
+  if (isLoading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -297,18 +313,21 @@ export default function Orders() {
                 onChange={handleFileUpload} 
                 className="hidden" 
                 accept=".xlsx,.xls" 
+                disabled={isLoading}
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Upload className="h-4 w-4" /> 导入订单
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} 导入订单
               </button>
               <button
                 onClick={() => { setEditingOrder(undefined); setIsFormOpen(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus className="h-4 w-4" /> 新增订单
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} 新增订单
               </button>
             </div>
           )}
@@ -392,15 +411,17 @@ export default function Orders() {
                             <>
                               <button 
                                 onClick={() => handleEdit(order)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md"
+                                disabled={isLoading}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button 
                                 onClick={() => handleDelete(order.id)}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
+                                disabled={isLoading}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                               </button>
                             </>
                           )}
