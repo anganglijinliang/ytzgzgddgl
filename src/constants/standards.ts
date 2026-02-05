@@ -17,6 +17,11 @@ export const PIPE_STANDARDS: PipeStandard[] = [
   { spec: 'DN100', level: 'C40', unitWeight: 95 },
   { spec: 'DN100', level: 'C30', unitWeight: 95 },
   
+  // DN125
+  { spec: 'DN125', level: 'K9', unitWeight: 115 },
+  { spec: 'DN125', level: 'C40', unitWeight: 115 },
+  { spec: 'DN125', level: 'C30', unitWeight: 110 },
+
   // DN150
   { spec: 'DN150', level: 'K9', unitWeight: 144 },
   { spec: 'DN150', level: 'C40', unitWeight: 144 }, // Min thickness often applies
@@ -106,6 +111,31 @@ export const PIPE_STANDARDS: PipeStandard[] = [
   { spec: 'DN1600', level: 'K9', unitWeight: 4668 },
   { spec: 'DN1600', level: 'C40', unitWeight: 4600 },
   { spec: 'DN1600', level: 'C25', unitWeight: 4400 },
+
+  // DN1800
+  { spec: 'DN1800', level: 'K9', unitWeight: 5780 },
+  { spec: 'DN1800', level: 'C40', unitWeight: 5700 },
+  { spec: 'DN1800', level: 'C25', unitWeight: 5500 },
+
+  // DN2000
+  { spec: 'DN2000', level: 'K9', unitWeight: 6980 },
+  { spec: 'DN2000', level: 'C40', unitWeight: 6900 },
+  { spec: 'DN2000', level: 'C25', unitWeight: 6700 },
+
+  // DN2200
+  { spec: 'DN2200', level: 'K9', unitWeight: 8280 },
+  { spec: 'DN2200', level: 'C40', unitWeight: 8200 },
+  { spec: 'DN2200', level: 'C25', unitWeight: 8000 },
+
+  // DN2400
+  { spec: 'DN2400', level: 'K9', unitWeight: 9680 },
+  { spec: 'DN2400', level: 'C40', unitWeight: 9600 },
+  { spec: 'DN2400', level: 'C25', unitWeight: 9400 },
+
+  // DN2600
+  { spec: 'DN2600', level: 'K9', unitWeight: 11200 },
+  { spec: 'DN2600', level: 'C40', unitWeight: 11100 },
+  { spec: 'DN2600', level: 'C25', unitWeight: 10900 },
 ];
 
 export const getStandardWeight = (spec: string, level: string): number | undefined => {

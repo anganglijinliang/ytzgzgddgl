@@ -41,7 +41,13 @@ interface AppState {
 
 // Mock Initial Data (Still used for MasterData defaults)
 const INITIAL_MASTER_DATA: MasterData = {
-  specs: ['DN100', 'DN200', 'DN300', 'DN400', 'DN500', 'DN600', 'DN800', 'DN1000', 'DN1200'],
+  specs: [
+    'DN80', 'DN100', 'DN125', 'DN150', 'DN200', 'DN250', 
+    'DN300', 'DN350', 'DN400', 'DN450', 'DN500', 'DN600', 
+    'DN700', 'DN800', 'DN900', 'DN1000', 'DN1100', 'DN1200', 
+    'DN1400', 'DN1500', 'DN1600', 'DN1800', 'DN2000', 'DN2200', 
+    'DN2400', 'DN2600'
+  ],
   levels: ['K9', 'K8', 'K7', 'C40', 'C30', 'C25'],
   interfaces: ['T型', 'K型', 'S型', '法兰'],
   linings: ['水泥砂浆', '环氧陶瓷', '聚氨酯'],
@@ -301,7 +307,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'angang-order-storage',
-      version: 2, // Bump version to 2 for async refactor
+      version: 3, // Bump version to 3 for specs update (DN80-2600)
       partialize: (state) => ({
         currentUser: state.currentUser,
         // We still persist masterData locally for faster load, but orders/records should come from DB
