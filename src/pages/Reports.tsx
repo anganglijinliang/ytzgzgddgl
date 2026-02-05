@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { FileDown, Printer, Search, BarChart2, PieChart } from 'lucide-react';
+import { FileDown, Printer, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -128,6 +128,11 @@ export default function Reports() {
 
     return Object.values(teamStats).sort((a, b) => b.quantity - a.quantity);
   }, [productionRecords]);
+
+  // Calculate totals
+  const totalPlan = React.useMemo(() => filteredData.reduce((acc, item) => acc + item.plannedQuantity, 0), [filteredData]);
+  const totalProd = React.useMemo(() => filteredData.reduce((acc, item) => acc + item.producedQuantity, 0), [filteredData]);
+  const totalShip = React.useMemo(() => filteredData.reduce((acc, item) => acc + item.shippedQuantity, 0), [filteredData]);
 
   return (
     <div className="space-y-6">

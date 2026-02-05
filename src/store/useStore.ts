@@ -20,7 +20,7 @@ interface AppState {
   deleteUser: (id: string) => Promise<void>;
   
   // Actions
-  login: (username: string) => void;
+  login: (username: string, password?: string) => Promise<boolean>;
   logout: () => void;
   
   fetchInitialData: () => Promise<void>;
@@ -62,9 +62,20 @@ export const useStore = create<AppState>()(
       isLoading: false,
       error: null,
 
-      login: (username) => {
+      login: async (username, password) => {
         const user = get().users.find(u => u.username === username);
-        if (user) set({ currentUser: user });
+        // Simple password check for demo purposes (in production, use backend auth)
+        if (user) {
+           // Allow admin default or specific passwords if needed, for now just check user existence
+           // or match a simple rule like '123456' or 'admin123' if we want to be strict
+           // For this stage, we'll assume success if user exists, or add a basic check
+           if (password && password !== '123456' && password !== 'admin123') {
+             return false; 
+           }
+           set({ currentUser: user });
+           return true;
+        }
+        return false;
       },
       logout: () => set({ currentUser: null }),
 

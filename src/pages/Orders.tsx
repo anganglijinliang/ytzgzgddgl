@@ -10,7 +10,8 @@ import {
   Trash2, 
   QrCode, 
   FileSpreadsheet,
-  Printer
+  Printer,
+  Upload
 } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -23,6 +24,7 @@ export default function Orders() {
   const [expandedOrders, setExpandedOrders] = React.useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = React.useState('');
   const [showQRCode, setShowQRCode] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'order_entry';
 
@@ -30,6 +32,45 @@ export default function Orders() {
     o.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const bstr = event.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+        
+        // Simple mapping (adjust as needed)
+        // Assume Excel has columns like "订单号", "客户", "规格", "级别", etc.
+        data.forEach((row: any) => {
+          if (row['订单号']) {
+             // Create a simplified order structure from the row
+             // Note: Real implementation might need more complex logic to merge items into existing orders
+             // For now, we'll just log or add a basic order
+             console.log('Importing row:', row);
+             
+             // Example: addOrder({ ... }) 
+             // Since we have a complex structure, we might need to prompt user or process carefully
+             // This is a placeholder for the actual import logic
+          }
+        });
+
+        alert(`成功解析 ${data.length} 条记录 (演示模式: 仅在控制台显示解析结果)`);
+      } catch (error) {
+        console.error("Error reading file:", error);
+        alert("文件读取失败");
+      }
+    };
+    reader.readAsBinaryString(file);
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const toggleExpand = (id: string) => {
     const newSet = new Set(expandedOrders);
