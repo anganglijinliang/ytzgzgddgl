@@ -46,13 +46,14 @@ interface AppState {
 // Mock Initial Data (Still used for MasterData defaults)
 const INITIAL_MASTER_DATA: MasterData = {
   specs: [
+    'DN40', 'DN50', 'DN60', 'DN65',
     'DN80', 'DN100', 'DN125', 'DN150', 'DN200', 'DN250', 
     'DN300', 'DN350', 'DN400', 'DN450', 'DN500', 'DN600', 
     'DN700', 'DN800', 'DN900', 'DN1000', 'DN1100', 'DN1200', 
     'DN1400', 'DN1500', 'DN1600', 'DN1800', 'DN2000', 'DN2200', 
     'DN2400', 'DN2600'
   ],
-  levels: ['K9', 'K8', 'K7', 'C40', 'C30', 'C25'],
+  levels: ['K12', 'K11', 'K10', 'K9', 'K8', 'K7', 'C100', 'C64', 'C50', 'C40', 'C30', 'C25', 'C20'],
   interfaces: ['T型', 'K型', 'S型', '法兰'],
   linings: ['水泥砂浆', '环氧陶瓷', '聚氨酯'],
   lengths: ['6米', '5.7米', '8米'],
