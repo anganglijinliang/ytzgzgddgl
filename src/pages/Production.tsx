@@ -310,47 +310,47 @@ const WorkshopView = ({
             </div>
 
             {/* Numpad Area */}
-            <div className="flex-1 flex gap-4 md:gap-8 min-h-[400px]">
-                <div className="flex-1 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6">
+            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 min-h-[450px] md:min-h-[400px]">
+                <div className="flex-1 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6 order-1 md:order-1">
                      {/* Modern NumPad */}
                      <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                             <button
                                 key={num}
                                 onClick={() => handleNumInput(num)}
-                                className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-3xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
+                                className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-2xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
                             >
                                 {num}
                             </button>
                         ))}
                         <button 
                             onClick={handleClear} 
-                            className="bg-red-50 border-b-4 border-red-100 text-red-500 text-xl font-bold rounded-2xl hover:bg-red-100 hover:border-red-200 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+                            className="bg-red-50 border-b-4 border-red-100 text-red-500 text-lg md:text-xl font-bold rounded-2xl hover:bg-red-100 hover:border-red-200 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
                         >
                             清空
                         </button>
                         <button 
                             onClick={() => handleNumInput(0)} 
-                            className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-3xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
+                            className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-2xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
                         >
                             0
                         </button>
                         <button 
                             onClick={handleBackspace} 
-                            className="bg-slate-100 border-b-4 border-slate-200 hover:bg-slate-200 text-slate-600 text-xl font-bold rounded-2xl active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+                            className="bg-slate-100 border-b-4 border-slate-200 hover:bg-slate-200 text-slate-600 text-lg md:text-xl font-bold rounded-2xl active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
                         >
                             ⌫
                         </button>
                     </div>
                 </div>
-                <div className="w-32 md:w-48 flex flex-col">
+                <div className="w-full md:w-48 h-24 md:h-auto flex-shrink-0 flex flex-col order-2 md:order-2">
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}
-                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl md:text-2xl font-bold rounded-3xl shadow-xl shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-col items-center justify-center gap-4 group"
+                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl md:text-2xl font-bold rounded-3xl shadow-xl shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-row md:flex-col items-center justify-center gap-4 group"
                     >
-                        <div className="p-3 bg-blue-500 rounded-full group-hover:scale-110 transition-transform">
-                            <CheckCircle2 size={40} className="md:w-12 md:h-12" />
+                        <div className="p-2 md:p-3 bg-blue-500 rounded-full group-hover:scale-110 transition-transform">
+                            <CheckCircle2 size={32} className="md:w-12 md:h-12" />
                         </div>
                         <span>确认提交</span>
                     </button>
