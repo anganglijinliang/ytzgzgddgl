@@ -29,7 +29,7 @@ interface AppState {
   updateOrder: (id: string, data: Partial<Order>) => void; // Keeping sync for now, should be async later
   deleteOrder: (id: string) => Promise<boolean>;
   
-  addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'>) => Promise<boolean>;
+  addProductionRecord: (record: Omit<ProductionRecord, 'id' | 'timestamp'> & { timestamp?: string }) => Promise<boolean>;
   
   // Plan Actions
   addPlan: (plan: Omit<ProductionPlan, 'id' | 'status'>) => Promise<boolean>;

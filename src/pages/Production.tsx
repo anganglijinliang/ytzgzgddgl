@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order, ProductionPlan } from '@/types';
-import { Search, CheckCircle2, ListTodo } from 'lucide-react';
+import { Search, CheckCircle2, ListTodo, Settings, X, Calendar } from 'lucide-react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -41,7 +41,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 import { useToast } from '@/context/ToastContext';
 
 export default function Production() {
-  const { orders: rawOrders, addProductionRecord, productionRecords: rawRecords, currentUser, isLoading, plans: rawPlans, addPlan, updatePlan } = useStore();
+  const { orders: rawOrders, addProductionRecord, productionRecords: rawRecords, currentUser, isLoading, plans: rawPlans, addPlan, updatePlan, masterData } = useStore();
   
   // Defensive checks for data types - Prevents blank screen if store data is corrupted/loading
   const orders = Array.isArray(rawOrders) ? rawOrders : [];
@@ -50,6 +50,7 @@ export default function Production() {
   const { showToast } = useToast();
   
   const [activeTab, setActiveTab] = React.useState<'tasks' | 'all'>('tasks');
+  const [showSettings, setShowSettings] = React.useState(false);
   
   // Selection State
   const [selectedOrderNo, setSelectedOrderNo] = React.useState('');
@@ -61,7 +62,8 @@ export default function Production() {
   const [quantity, setQuantity] = React.useState<number>(0);
   const [team, setTeam] = React.useState<string>(localStorage.getItem('prod_team') || '甲班');
   const [shift, setShift] = React.useState<string>(localStorage.getItem('prod_shift') || '白班');
-  const [workshop, _setWorkshop] = React.useState<string>(localStorage.getItem('prod_workshop') || '一车间');
+  const [workshop, setWorkshop] = React.useState<string>(localStorage.getItem('prod_workshop') || '一车间');
+  const [recordDate, setRecordDate] = React.useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
   const [heatNo, setHeatNo] = React.useState<string>('');
   const [process, setProcess] = React.useState<string>(localStorage.getItem('prod_process') || 'pulling');
 
@@ -74,7 +76,8 @@ export default function Production() {
     localStorage.setItem('prod_shift', shift);
     localStorage.setItem('prod_workshop', workshop);
     localStorage.setItem('prod_process', process);
-  }, [team, shift, workshop, process]);
+    localStorage.setItem('prod_date', recordDate);
+  }, [team, shift, workshop, process, recordDate]);
   
   const canOperate = currentUser?.role === 'admin' || currentUser?.role === 'production' || currentUser?.role === 'operator';
 
@@ -138,6 +141,10 @@ export default function Production() {
   const handleWorkshopSubmit = async () => {
       if (!selectedOrder || !selectedSubOrder || quantity <= 0) return;
       
+      const now = new Date();
+      const [y, m, d] = recordDate.split('-').map(Number);
+      const recordTimestamp = new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
+
       const success = await addProductionRecord({
         orderId: selectedOrder.id,
         subOrderId: selectedSubOrder,
@@ -147,7 +154,8 @@ export default function Production() {
         workshop,
         heatNo,
         process: process as any,
-        operatorId: currentUser?.id || 'unknown'
+        operatorId: currentUser?.id || 'unknown',
+        timestamp: recordTimestamp
       });
 
       if (success) {
@@ -204,6 +212,87 @@ export default function Production() {
           <p className="text-2xl text-gray-600">{message}</p>
         </div>
       </div>
+    );
+  };
+
+  const SettingsModal = () => {
+    if (!showSettings) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl w-[600px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center p-6 border-b">
+                    <h2 className="text-xl font-bold text-gray-900">生产环境设置</h2>
+                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <X className="h-6 w-6 text-gray-500" />
+                    </button>
+                </div>
+                <div className="p-6 space-y-6">
+                    {/* Date Selection */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">生产日期 (Date)</label>
+                        <input 
+                            type="date" 
+                            value={recordDate}
+                            onChange={(e) => setRecordDate(e.target.value)}
+                            className="w-full p-4 border-2 border-gray-200 rounded-xl text-lg font-mono focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
+                        />
+                    </div>
+                     {/* Workshop Selection */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">所属车间 (Workshop)</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            {(masterData?.workshops || ['一车间', '二车间', '三车间', '四车间']).map(w => (
+                                <button
+                                    key={w}
+                                    onClick={() => setWorkshop(w)}
+                                    className={`py-3 rounded-lg border-2 font-bold transition-all ${workshop === w ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-blue-200'}`}
+                                >
+                                    {w}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                     {/* Team Selection */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">生产班组 (Team)</label>
+                        <div className="grid grid-cols-4 gap-3">
+                            {['甲班', '乙班', '丙班', '丁班'].map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => setTeam(t)}
+                                    className={`py-3 rounded-lg border-2 font-bold transition-all ${team === t ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:border-orange-200'}`}
+                                >
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                     {/* Shift Selection */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">生产班次 (Shift)</label>
+                        <div className="grid grid-cols-3 gap-3">
+                            {['白班', '中班', '夜班'].map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setShift(s)}
+                                    className={`py-3 rounded-lg border-2 font-bold transition-all ${shift === s ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-600 hover:border-purple-200'}`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <div className="p-4 border-t bg-gray-50 flex justify-end">
+                    <button 
+                        onClick={() => setShowSettings(false)}
+                        className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                    >
+                        完成设置
+                    </button>
+                </div>
+            </div>
+        </div>
     );
   };
 
@@ -265,13 +354,23 @@ export default function Production() {
     <ErrorBoundary>
     <div className="h-[calc(100vh-100px)] flex flex-col bg-gray-50 -m-4 p-4">
       <SuccessOverlay show={showSuccess} message={`录入成功 +${quantity}`} />
+      <SettingsModal />
       
       {/* Header Bar */}
       <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm">
         <div className="flex items-center gap-4">
+           <button 
+             onClick={() => setShowSettings(true)}
+             className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors active:scale-95"
+           >
+             <Settings className="h-6 w-6 text-gray-600" />
+           </button>
            <div>
              <h1 className="text-2xl font-bold text-gray-900">生产报工 (车间模式)</h1>
-             <div className="flex gap-2 text-sm text-gray-500">
+             <div className="flex gap-2 text-sm text-gray-500 items-center mt-1">
+               <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded text-gray-700 font-mono">
+                  <Calendar className="h-3 w-3" /> {recordDate}
+               </span>
                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{workshop}</span>
                <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded">{team}</span>
                <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded">{shift}</span>
@@ -281,7 +380,7 @@ export default function Production() {
         <div className="text-right">
            <div className="text-3xl font-bold text-blue-600">
              {productionRecords
-               .filter(r => r && r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0]))
+               .filter(r => r && r.timestamp && r.timestamp.startsWith(recordDate))
                .reduce((acc, cur) => acc + (cur.quantity || 0), 0)}
            </div>
            <div className="text-xs text-gray-400">今日累计产量</div>
