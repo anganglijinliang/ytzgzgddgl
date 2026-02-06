@@ -358,9 +358,10 @@ export default function Reports() {
               </div>
             </div>
 
-            {/* Data Table */}
+            {/* Data Table / Cards */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -417,6 +418,63 @@ export default function Reports() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredData.map((item, idx) => (
+                  <div key={`${item.id}-${idx}-mobile`} className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-slate-900">{item.orderNo}</div>
+                        <div className="text-sm text-slate-500 mt-0.5">{item.customerName}</div>
+                      </div>
+                      <span className={clsx(
+                        "inline-flex items-center px-2 py-1 rounded-md text-xs font-bold border",
+                        item.status === 'new' ? 'bg-slate-100 text-slate-600 border-slate-200' : 
+                        item.status === 'production_completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                        'bg-amber-50 text-amber-700 border-amber-200'
+                      )}>
+                        {item.status === 'new' ? '未开始' : 
+                         item.status === 'production_completed' ? '已完成' : '生产中'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="bg-slate-50 p-2 rounded-lg">
+                        <span className="text-slate-400 text-xs block">规格</span>
+                        <span className="font-medium text-slate-700">{item.spec}</span>
+                      </div>
+                      <div className="bg-slate-50 p-2 rounded-lg">
+                        <span className="text-slate-400 text-xs block">级别</span>
+                        <span className="font-medium text-slate-700">{item.level}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">生产进度</span>
+                        <span className="font-medium text-slate-900">{item.producedQuantity} / {item.plannedQuantity}</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className={clsx("h-full rounded-full transition-all duration-500",
+                            (item.producedQuantity / item.plannedQuantity) >= 1 ? "bg-emerald-500" : "bg-blue-500"
+                          )}
+                          style={{ width: `${Math.min(100, (item.producedQuantity / item.plannedQuantity) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredData.length === 0 && (
+                  <div className="p-8 text-center text-slate-400 bg-slate-50/50">
+                    <div className="flex flex-col items-center justify-center">
+                      <Search className="h-10 w-10 mb-2 opacity-50" />
+                      <p>没有找到匹配的数据</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

@@ -144,7 +144,8 @@ export default function Users() {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
               <tr>
@@ -206,6 +207,54 @@ export default function Users() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-gray-200">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
+                  {user.name[0]}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-gray-900">{user.name}</span>
+                    <span className={clsx("px-2 py-0.5 rounded-full text-[10px] font-medium", roleColors[user.role])}>
+                      {roleLabels[user.role]}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 font-mono">
+                    {user.username}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => handleEdit(user)}
+                  disabled={isLoading}
+                  className="p-2 text-gray-400 hover:text-blue-600 active:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+                {currentUser?.id !== user.id && (
+                  <button 
+                    onClick={() => handleDelete(user.id)}
+                    disabled={isLoading}
+                    className="p-2 text-gray-400 hover:text-red-600 active:bg-red-50 rounded-lg transition-colors"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          {filteredUsers.length === 0 && (
+            <div className="p-8 text-center text-gray-500">
+              没有找到匹配的用户
+            </div>
+          )}
         </div>
       </div>
 

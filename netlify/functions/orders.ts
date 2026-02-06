@@ -84,26 +84,38 @@ export const handler = async (event, context) => {
 
         const orderId = orderResult.rows[0].id;
 
-        // Insert Items
-        for (const item of items) {
-          await client.query(`
+        // Insert Items (Bulk Insert)
+        if (items.length > 0) {
+          const values: any[] = [];
+          const placeholders: string[] = [];
+          let paramIndex = 1;
+
+          items.forEach((item: any) => {
+            placeholders.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9}, $${paramIndex + 10})`);
+            values.push(
+              orderId,
+              item.spec,
+              item.level,
+              item.interfaceType,
+              item.lining,
+              item.length,
+              item.coating,
+              item.plannedQuantity,
+              item.unitWeight,
+              item.totalWeight,
+              item.batchNo
+            );
+            paramIndex += 11;
+          });
+
+          const query = `
             INSERT INTO sub_orders (
               order_id, spec, level, interface_type, lining, length, coating, 
               planned_quantity, unit_weight, total_weight, batch_no
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-          `, [
-            orderId,
-            item.spec,
-            item.level,
-            item.interfaceType,
-            item.lining,
-            item.length,
-            item.coating,
-            item.plannedQuantity,
-            item.unitWeight,
-            item.totalWeight,
-            item.batchNo
-          ]);
+            ) VALUES ${placeholders.join(', ')}
+          `;
+
+          await client.query(query, values);
         }
 
         await client.query('COMMIT');

@@ -353,7 +353,8 @@ export default function Orders() {
 
       {/* Orders List */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 border-b border-slate-200 backdrop-blur-sm">
               <tr>
@@ -447,105 +448,65 @@ export default function Orders() {
                           </span>
                         </td>
                         <td className="px-6 py-5 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <button 
-                              onClick={() => setShowQRCode(order.id)}
-                              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="查看二维码"
-                            >
-                              <QrCode className="h-4 w-4" />
-                            </button>
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             {canEdit && (
                               <>
                                 <button 
                                   onClick={() => handleEdit(order)}
-                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                   title="编辑"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </button>
                                 <button 
                                   onClick={() => handleDelete(order.id)}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                   title="删除"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                               </>
                             )}
+                            <button 
+                              onClick={() => setShowQRCode(order.orderNo)}
+                              className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all"
+                              title="查看二维码"
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
                       {isExpanded && (
                         <tr className="bg-slate-50/50">
-                          <td colSpan={6} className="p-0">
-                            <div className="px-6 py-6 border-b border-slate-100 shadow-inner bg-slate-50/50">
-                              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                                  <h4 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-                                    <FileText className="h-4 w-4 text-slate-400" />
-                                    订单明细列表
-                                  </h4>
-                                  {order.remarks && (
-                                    <span className="text-xs text-slate-500 max-w-md truncate" title={order.remarks}>
-                                      备注: {order.remarks}
-                                    </span>
-                                  )}
-                                </div>
-                                <table className="w-full text-sm">
-                                  <thead className="bg-white">
-                                    <tr>
-                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100">规格型号</th>
-                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100">接口/内衬</th>
-                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100 text-center">计划支数</th>
-                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100 text-center">已完成</th>
-                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100 text-center">完成率</th>
-                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100">状态</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-50">
-                                    {order.items.map(item => {
-                                      const itemProgress = item.plannedQuantity > 0 
-                                        ? Math.round((item.producedQuantity / item.plannedQuantity) * 100) 
-                                        : 0;
-                                      return (
-                                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                                          <td className="px-4 py-3">
-                                            <div className="font-medium text-slate-700">{item.spec}</div>
-                                            <div className="text-xs text-slate-500">{item.level}级</div>
-                                          </td>
-                                          <td className="px-4 py-3 text-slate-600">
-                                            <div className="text-xs">{item.interfaceType}</div>
-                                            <div className="text-xs text-slate-400">{item.lining}</div>
-                                          </td>
-                                          <td className="px-4 py-3 text-center font-medium text-slate-700">
-                                            {item.plannedQuantity}
-                                          </td>
-                                          <td className="px-4 py-3 text-center text-slate-600">
-                                            {item.producedQuantity}
-                                          </td>
-                                          <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2 justify-center">
-                                              <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div 
-                                                  className={`h-full rounded-full ${itemProgress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} 
-                                                  style={{ width: `${itemProgress}%` }} 
-                                                />
-                                              </div>
-                                              <span className="text-xs text-slate-400 w-8">{itemProgress}%</span>
-                                            </div>
-                                          </td>
-                                          <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                              ${itemProgress === 100 ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                                              {itemProgress === 100 ? '已完成' : '生产中'}
-                                            </span>
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
+                          <td colSpan={6} className="px-6 py-4">
+                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                              <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+                                订单明细
+                              </h4>
+                              <div className="grid gap-2">
+                                {order.items.map((item, idx) => (
+                                  <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                      <span className="font-bold text-slate-700 w-20">{item.spec}</span>
+                                      <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-xs text-slate-500">{item.level}</span>
+                                      <span className="text-slate-600">{item.interfaceType} / {item.lining} / {item.coating}</span>
+                                    </div>
+                                    <div className="flex items-center gap-6">
+                                      <div className="text-right">
+                                        <div className="text-xs text-slate-400">计划/已产</div>
+                                        <div className="font-medium text-slate-700">
+                                          {item.plannedQuantity} <span className="text-slate-300">/</span> <span className="text-blue-600">{item.producedQuantity}</span>
+                                        </div>
+                                      </div>
+                                      <div className={`text-xs px-2 py-1 rounded-md font-medium
+                                        ${item.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                        {item.status === 'completed' ? '完成' : '生产中'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           </td>
@@ -557,6 +518,121 @@ export default function Orders() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredOrders.length === 0 ? (
+             <div className="px-6 py-12 text-center text-slate-400">
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <Package className="h-12 w-12 text-slate-200" />
+                  <p>暂无订单数据</p>
+                </div>
+              </div>
+          ) : (
+            filteredOrders.map(order => {
+              const totalPlan = order.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
+              const totalDone = order.items.reduce((acc, i) => acc + i.producedQuantity, 0);
+              const progress = totalPlan > 0 ? Math.round((totalDone / totalPlan) * 100) : 0;
+              const isExpanded = expandedOrders.has(order.id);
+
+              return (
+                <div key={order.id} className="p-4 bg-white space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                         <h3 className="text-lg font-bold text-slate-800">{order.orderNo}</h3>
+                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border
+                            ${order.status === 'new' ? 'bg-blue-50 text-blue-700 border-blue-100' : 
+                              order.status === 'in_production' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                              order.status === 'production_completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                            {order.status === 'new' ? '新建' : 
+                             order.status === 'in_production' ? '生产中' :
+                             order.status === 'production_completed' ? '已完成' : order.status}
+                          </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                        <span className="flex items-center gap-1"><User className="h-3 w-3" /> {order.customerName || '未指定'}</span>
+                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {order.deliveryDate || '未指定'}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                       {canEdit && (
+                          <button 
+                            onClick={() => handleEdit(order)}
+                            className="p-2 text-blue-600 bg-blue-50 rounded-lg"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                       )}
+                       <button 
+                          onClick={() => toggleExpand(order.id)}
+                          className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-slate-100 text-slate-600' : 'bg-slate-50 text-slate-400'}`}
+                        >
+                          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>生产进度</span>
+                      <span>{progress}% ({totalDone}/{totalPlan})</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                       <div 
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                          }`} 
+                          style={{ width: `${progress}%` }} 
+                        />
+                    </div>
+                  </div>
+
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="pt-2 border-t border-slate-100 mt-2 space-y-2 animate-in fade-in slide-in-from-top-2">
+                       {order.items.map((item, idx) => (
+                          <div key={idx} className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
+                             <div className="flex justify-between mb-1">
+                                <span className="font-bold text-slate-700">{item.spec} <span className="font-normal text-slate-500 text-xs">/ {item.level}</span></span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${item.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}`}>
+                                  {item.status === 'completed' ? '完成' : '生产中'}
+                                </span>
+                             </div>
+                             <div className="text-xs text-slate-500 mb-2">
+                               {item.interfaceType} / {item.lining} / {item.coating}
+                             </div>
+                             <div className="flex justify-between items-end">
+                                <span className="text-xs text-slate-400">计划: {item.plannedQuantity}</span>
+                                <span className="text-sm font-medium text-blue-600">已产: {item.producedQuantity}</span>
+                             </div>
+                          </div>
+                       ))}
+                       
+                       <div className="flex justify-end gap-2 pt-2">
+                          {canEdit && (
+                            <button 
+                              onClick={() => handleDelete(order.id)}
+                              className="flex items-center gap-1 px-3 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg"
+                            >
+                              <Trash2 className="h-3 w-3" /> 删除订单
+                            </button>
+                          )}
+                           <button 
+                              onClick={() => setShowQRCode(order.orderNo)}
+                              className="flex items-center gap-1 px-3 py-1.5 text-xs text-slate-600 bg-slate-100 rounded-lg"
+                            >
+                              <QrCode className="h-3 w-3" /> 二维码
+                            </button>
+                       </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

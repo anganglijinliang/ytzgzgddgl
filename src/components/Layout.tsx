@@ -157,8 +157,20 @@ export default function Layout() {
                 </Link>
               ))}
             </nav>
-            <div className="mt-8 pt-4 border-t border-gray-200">
-               <button
+
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <div className="flex items-center gap-3 px-4 mb-4">
+                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+                    {currentUser.name.charAt(0)}
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-gray-900">{currentUser.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {currentUser.role === 'admin' ? '系统管理员' : currentUser.role === 'order_entry' ? '订单录入员' : '生产主管'}
+                    </p>
+                 </div>
+              </div>
+              <button
                 onClick={() => { logout(); navigate('/login'); }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >

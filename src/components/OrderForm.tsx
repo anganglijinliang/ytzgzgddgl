@@ -170,21 +170,21 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-2xl sticky top-0 z-10">
+        <div className="px-6 py-4 sm:px-8 sm:py-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-2xl sticky top-0 z-10">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
               {initialData ? (
                 <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                   <FileText className="h-6 w-6" />
+                   <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
               ) : (
                 <div className="p-2 bg-green-100 text-green-600 rounded-lg">
-                   <Plus className="h-6 w-6" />
+                   <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
               )}
               {initialData ? '编辑订单' : '创建新订单'}
             </h2>
-            <p className="text-slate-500 text-sm mt-1 ml-14">
+            <p className="text-slate-500 text-xs sm:text-sm mt-1 ml-12 sm:ml-14">
               {initialData ? `订单号: ${initialData.orderNo}` : '填写下方的表单以创建新的生产订单'}
             </p>
           </div>
@@ -197,11 +197,11 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
-          <div className="space-y-8 max-w-6xl mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50">
+          <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
             
             {/* Section: Basic Info */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100">
               <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
                 基本信息

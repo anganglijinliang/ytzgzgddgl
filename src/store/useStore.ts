@@ -266,9 +266,9 @@ export const useStore = create<AppState>()(
 
       addOrder: async (orderData) => {
         set({ isLoading: true });
+        // Optimistic update
+        const tempId = uuidv4();
         try {
-          // Optimistic update
-          const tempId = uuidv4();
           const newOrder: Order = {
             ...orderData,
             id: tempId,
@@ -291,11 +291,21 @@ export const useStore = create<AppState>()(
             body: JSON.stringify(orderData),
           });
 
-          if (!response.ok) throw new Error('Failed to save order');
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to save order: ${response.status} ${errorText}`);
+          }
           
-          // Ideally we should replace the temp ID with the real ID from DB, 
-          // but for now we'll just re-fetch to be safe and simple
-          await get().fetchInitialData();
+          const result = await response.json();
+          const realId = result.id;
+
+          // Update the optimistic order with real ID and re-fetch to ensure sync
+          set(state => ({
+            orders: state.orders.map(o => o.id === tempId ? { ...o, id: realId } : o)
+          }));
+          
+          // Background fetch to ensure full consistency (don't await this to block UI)
+          get().fetchInitialData().catch(console.error);
           
           // Update master data
           const { updateMasterData } = get();
@@ -309,10 +319,17 @@ export const useStore = create<AppState>()(
           });
           if (orderData.warehouse) updateMasterData('warehouses', orderData.warehouse);
           
+          set({ isLoading: false });
           return true;
+
         } catch (error) {
            console.error('Add Order Error:', error);
-           set({ error: 'Failed to save order to database', isLoading: false });
+           // Rollback optimistic update
+           set(state => ({ 
+             orders: state.orders.filter(o => o.id !== tempId),
+             error: 'Failed to save order to database', 
+             isLoading: false 
+           }));
            return false;
         }
       },

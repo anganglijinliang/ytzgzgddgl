@@ -126,10 +126,10 @@ export default function Dashboard() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex justify-between items-end"
+        className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4"
       >
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">仪表盘</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">仪表盘</h1>
           <p className="text-slate-500 mt-2 font-medium">实时监控生产状态与订单进度</p>
         </div>
         <div className="text-sm text-slate-400 font-medium">
