@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Order } from '@/types';
 import { useStore } from '@/store/useStore';
-import { Plus, Trash2, X, Loader2, ChevronDown, Package, Ruler, Scale, Calendar, User, FileText, Factory, Warehouse } from 'lucide-react';
+import { Plus, Trash2, X, Loader2, ChevronDown, Package, Calendar, User, FileText, Factory, Warehouse } from 'lucide-react';
 import { getStandardWeight } from '@/constants/standards';
 import clsx from 'clsx';
 

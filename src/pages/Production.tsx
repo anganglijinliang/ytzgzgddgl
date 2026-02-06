@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
-import { Order, ProductionPlan, SubOrder, ProductionProcess, MasterData } from '@/types';
+import { Order, ProductionPlan, SubOrder, ProductionProcess } from '@/types';
 import { 
   Search, CheckCircle2, ListTodo, Settings, X, Calendar, 
-  Plus, Users, Factory, Clock, AlertCircle, ChevronRight,
-  ClipboardList, ArrowRight, TrendingUp, Package, History
+  Factory, ClipboardList, ArrowRight, Package
 } from 'lucide-react';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,21 +17,20 @@ import clsx from 'clsx';
 
 // 1. Workshop Mode (Touch Friendly) - Preserved & Polished
 const WorkshopView = ({ 
-  currentUser, masterData, orders, plans, addProductionRecord, updatePlan 
+  currentUser, orders, plans, addProductionRecord, updatePlan 
 }: any) => {
   const { showToast } = useToast();
   // ... (State from original file)
-  const [selectedOrderNo, setSelectedOrderNo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedSubOrder, setSelectedSubOrder] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
 
   const [quantity, setQuantity] = useState<number>(0);
   const [team, setTeam] = useState<string>(localStorage.getItem('prod_team') || '甲班');
-  const [shift, setShift] = useState<string>(localStorage.getItem('prod_shift') || '白班');
-  const [workshop, setWorkshop] = useState<string>(localStorage.getItem('prod_workshop') || '一车间');
-  const [recordDate, setRecordDate] = useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
-  const [heatNo, setHeatNo] = useState<string>('');
+  const [shift] = useState<string>(localStorage.getItem('prod_shift') || '白班');
+  const [workshop] = useState<string>(localStorage.getItem('prod_workshop') || '一车间');
+  const [recordDate] = useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
+  const [heatNo] = useState<string>('');
   const [process, setProcess] = useState<string>(localStorage.getItem('prod_process') || 'pulling');
   
   const [showSettings, setShowSettings] = useState(false);
@@ -59,7 +57,6 @@ const WorkshopView = ({
   const handleSelectPlan = (plan: ProductionPlan) => {
     const order = orders.find((o: Order) => o.id === plan.orderId);
     if (!order) return;
-    setSelectedOrderNo(order.orderNo);
     setSelectedOrder(order);
     setSelectedSubOrder(plan.subOrderId);
     setSelectedPlanId(plan.id);
@@ -325,7 +322,7 @@ const WorkshopView = ({
 };
 
 // 2. Dispatcher View (Modern Management UI)
-const DispatcherView = ({ orders, plans, addPlan, masterData, currentUser }: any) => {
+const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
     const { showToast } = useToast();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [selectedItem, setSelectedItem] = useState<SubOrder | null>(null);

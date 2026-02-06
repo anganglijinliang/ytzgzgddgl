@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { FileDown, Printer, Search, Loader2, Calendar, Filter, BarChart3, TrendingUp, ChevronDown, RefreshCw } from 'lucide-react';
+import { FileDown, Printer, Search, Loader2, Calendar, BarChart3, TrendingUp, ChevronDown } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -444,7 +444,7 @@ export default function Reports() {
                         <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                         <Tooltip content={<CustomTooltip />} cursor={{fill: '#f8fafc'}} />
                         <Bar dataKey="quantity" name="总支数" radius={[4, 4, 0, 0]}>
-                          {efficiencyData.map((entry, index) => (
+                          {efficiencyData.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#3b82f6' : '#6366f1'} />
                           ))}
                         </Bar>

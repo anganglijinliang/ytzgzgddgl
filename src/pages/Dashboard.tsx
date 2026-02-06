@@ -12,10 +12,8 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  AreaChart,
-  Area
 } from 'recharts';
-import { FileText, Factory, AlertCircle, Activity, Layers, Database, Loader2, TrendingUp, Package, CheckCircle2, Clock } from 'lucide-react';
+import { FileText, Factory, Activity, Layers, Database, Loader2, TrendingUp, CheckCircle2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/context/ToastContext';
 import clsx from 'clsx';
@@ -212,7 +210,7 @@ export default function Dashboard() {
                 <Legend iconType="circle" wrapperStyle={{paddingTop: '20px'}} />
                 <Bar name="累计产量" dataKey="total" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
                 <Bar name="积压库存(WIP)" dataKey="wip" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                   {wipChartData.map((entry, index) => (
+                   {wipChartData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={['#3b82f6', '#f59e0b', '#fb923c', '#10b981'][index % 4]} />
                     ))}
                 </Bar>

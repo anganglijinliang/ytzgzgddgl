@@ -8,7 +8,6 @@ import {
   LogOut, 
   Menu,
   X,
-  UserCircle,
   BarChart3,
   Users,
   WifiOff
