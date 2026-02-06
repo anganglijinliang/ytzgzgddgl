@@ -13,7 +13,11 @@ import {
   FileSpreadsheet,
   Printer,
   Upload,
-  Loader2
+  Loader2,
+  FileText,
+  Calendar,
+  User,
+  Package
 } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -119,7 +123,6 @@ export default function Orders() {
   const handleCreate = async (data: any) => {
     try {
       if (editingOrder) {
-        // Optimistic update handled by store, but if we had async updateOrder:
         updateOrder(editingOrder.id, data);
         showToast('订单更新成功', 'success');
         setIsFormOpen(false);
@@ -287,292 +290,301 @@ export default function Orders() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">订单管理</h2>
-        <div className="flex flex-wrap gap-2">
-           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">订单管理</h2>
+          <p className="text-sm text-slate-500 mt-1">管理所有生产订单、进度跟踪及导出</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input 
               type="text" 
-              placeholder="搜索订单号/客户..." 
+              placeholder="搜索订单号、客户..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+              className="pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm w-full sm:w-64 transition-all"
             />
           </div>
-          {canEdit && (
-            <div className="flex gap-2">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
-                className="hidden" 
-                accept=".xlsx,.xls" 
-                disabled={isLoading}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} 导入订单
-              </button>
-              <button
-                onClick={() => { setEditingOrder(undefined); setIsFormOpen(true); }}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} 新增订单
-              </button>
-            </div>
-          )}
-          <button onClick={exportExcel} className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100" title="导出 Excel">
-            <FileSpreadsheet className="h-5 w-5" />
-          </button>
-          <button onClick={handlePrint} className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100" title="打印报表">
-            <Printer className="h-5 w-5" />
-          </button>
+          
+          <div className="flex gap-2">
+            {canEdit && (
+              <>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileUpload} 
+                  className="hidden" 
+                  accept=".xlsx,.xls" 
+                  disabled={isLoading}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all text-sm font-medium shadow-sm"
+                  title="导入Excel"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  <span className="hidden sm:inline">导入</span>
+                </button>
+                <button
+                  onClick={() => { setEditingOrder(undefined); setIsFormOpen(true); }}
+                  disabled={isLoading}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all text-sm font-medium"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  <span>新建订单</span>
+                </button>
+              </>
+            )}
+            <div className="h-10 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+            <button onClick={exportExcel} className="p-2.5 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-green-600 transition-colors shadow-sm" title="导出 Excel">
+              <FileSpreadsheet className="h-5 w-5" />
+            </button>
+            <button onClick={handlePrint} className="p-2.5 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-blue-600 transition-colors shadow-sm" title="打印报表">
+              <Printer className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="hidden md:block overflow-x-auto">
+      {/* Orders List */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-slate-50/80 border-b border-slate-200 backdrop-blur-sm">
               <tr>
-                <th className="px-6 py-3 font-semibold text-gray-700 w-10"></th>
-                <th className="px-6 py-3 font-semibold text-gray-700">订单号</th>
-                <th className="px-6 py-3 font-semibold text-gray-700">客户</th>
-                <th className="px-6 py-3 font-semibold text-gray-700">交货日期</th>
-                <th className="px-6 py-3 font-semibold text-gray-700">总进度</th>
-                <th className="px-6 py-3 font-semibold text-gray-700">状态</th>
-                <th className="px-6 py-3 font-semibold text-gray-700 text-right">操作</th>
+                <th className="px-6 py-4 font-semibold text-slate-600 w-12"></th>
+                <th className="px-6 py-4 font-semibold text-slate-600">订单信息</th>
+                <th className="px-6 py-4 font-semibold text-slate-600">客户 / 交期</th>
+                <th className="px-6 py-4 font-semibold text-slate-600">生产进度</th>
+                <th className="px-6 py-4 font-semibold text-slate-600">状态</th>
+                <th className="px-6 py-4 font-semibold text-slate-600 text-right">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredOrders.map(order => {
-                const totalPlan = order.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
-                const totalDone = order.items.reduce((acc, i) => acc + i.producedQuantity, 0);
-                const progress = totalPlan > 0 ? Math.round((totalDone / totalPlan) * 100) : 0;
-                
-                return (
-                  <React.Fragment key={order.id}>
-                    <tr className={`hover:bg-gray-50 transition-colors ${expandedOrders.has(order.id) ? 'bg-blue-50/30' : ''}`}>
-                      <td className="px-6 py-4">
-                        <button 
-                          onClick={() => toggleExpand(order.id)}
-                          className="text-gray-400 hover:text-blue-600"
-                        >
-                          {expandedOrders.has(order.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-900">{order.orderNo}</td>
-                      <td className="px-6 py-4 text-gray-600">{order.customerName || '-'}</td>
-                      <td className="px-6 py-4 text-gray-600">{order.deliveryDate || '-'}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }} />
-                          </div>
-                          <span className="text-xs text-gray-500">{progress}%</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${order.status === 'new' ? 'bg-blue-100 text-blue-800' : 
-                            order.status === 'in_production' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'production_completed' ? 'bg-teal-100 text-teal-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {order.status === 'new' ? '新建' : 
-                           order.status === 'in_production' ? '生产中' :
-                           order.status === 'production_completed' ? '生产完成' : order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+            <tbody className="divide-y divide-slate-100">
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Package className="h-12 w-12 text-slate-200" />
+                      <p>暂无订单数据</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders.map(order => {
+                  const totalPlan = order.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
+                  const totalDone = order.items.reduce((acc, i) => acc + i.producedQuantity, 0);
+                  const progress = totalPlan > 0 ? Math.round((totalDone / totalPlan) * 100) : 0;
+                  const isExpanded = expandedOrders.has(order.id);
+                  
+                  return (
+                    <React.Fragment key={order.id}>
+                      <tr 
+                        className={`group transition-all duration-200 ${isExpanded ? 'bg-blue-50/40' : 'hover:bg-slate-50'}`}
+                      >
+                        <td className="px-6 py-5">
                           <button 
-                            onClick={() => setShowQRCode(order.id)}
-                            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-md"
-                            title="查看二维码"
+                            onClick={() => toggleExpand(order.id)}
+                            className={`p-1 rounded-full transition-colors ${isExpanded ? 'bg-blue-100 text-blue-600' : 'text-slate-400 group-hover:text-blue-500 group-hover:bg-blue-50'}`}
                           >
-                            <QrCode className="h-4 w-4" />
+                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                           </button>
-                          {canEdit && (
-                            <>
-                              <button 
-                                onClick={() => handleEdit(order)}
-                                disabled={isLoading}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(order.id)}
-                                disabled={isLoading}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedOrders.has(order.id) && (
-                      <tr className="bg-gray-50/50">
-                        <td colSpan={7} className="px-6 py-4 pl-16">
-                          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                            <table className="w-full text-xs">
-                              <thead className="bg-gray-100">
-                                <tr>
-                                  <th className="px-4 py-2 font-medium text-gray-600">规格</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">级别</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">接口</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">内衬</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">计划</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">已产</th>
-                                  <th className="px-4 py-2 font-medium text-gray-600">状态</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                {order.items.map(item => (
-                                  <tr key={item.id}>
-                                    <td className="px-4 py-2">{item.spec}</td>
-                                    <td className="px-4 py-2">{item.level}</td>
-                                    <td className="px-4 py-2">{item.interfaceType}</td>
-                                    <td className="px-4 py-2">{item.lining}</td>
-                                    <td className="px-4 py-2 font-medium">{item.plannedQuantity}</td>
-                                    <td className="px-4 py-2 text-green-600">{item.producedQuantity}</td>
-                                    <td className="px-4 py-2">{item.status === 'new' ? '-' : '进行中'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex flex-col">
+                            <span className="text-base font-bold text-slate-800">{order.orderNo}</span>
+                            <span className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                              {order.items.length} 个规格项
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-slate-700 font-medium">
+                              <User className="h-3.5 w-3.5 text-slate-400" />
+                              {order.customerName || '未指定客户'}
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-500 text-xs">
+                              <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                              {order.deliveryDate || '未指定日期'}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="w-48">
+                            <div className="flex justify-between text-xs mb-1.5">
+                              <span className="font-medium text-slate-700">{progress}%</span>
+                              <span className="text-slate-500">{totalDone}/{totalPlan} 支</span>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                                }`} 
+                                style={{ width: `${progress}%` }} 
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border
+                            ${order.status === 'new' ? 'bg-blue-50 text-blue-700 border-blue-100' : 
+                              order.status === 'in_production' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                              order.status === 'production_completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full mr-2 
+                              ${order.status === 'new' ? 'bg-blue-500' : 
+                                order.status === 'in_production' ? 'bg-amber-500' :
+                                order.status === 'production_completed' ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
+                            {order.status === 'new' ? '新建' : 
+                             order.status === 'in_production' ? '生产中' :
+                             order.status === 'production_completed' ? '已完成' : order.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => setShowQRCode(order.id)}
+                              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                              title="查看二维码"
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </button>
+                            {canEdit && (
+                              <>
+                                <button 
+                                  onClick={() => handleEdit(order)}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title="编辑"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(order.id)}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="删除"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-              {filteredOrders.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
-                    没有找到匹配的订单
-                  </td>
-                </tr>
+                      {isExpanded && (
+                        <tr className="bg-slate-50/50">
+                          <td colSpan={6} className="p-0">
+                            <div className="px-6 py-6 border-b border-slate-100 shadow-inner bg-slate-50/50">
+                              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                                  <h4 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-slate-400" />
+                                    订单明细列表
+                                  </h4>
+                                  {order.remarks && (
+                                    <span className="text-xs text-slate-500 max-w-md truncate" title={order.remarks}>
+                                      备注: {order.remarks}
+                                    </span>
+                                  )}
+                                </div>
+                                <table className="w-full text-sm">
+                                  <thead className="bg-white">
+                                    <tr>
+                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100">规格型号</th>
+                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100">接口/内衬</th>
+                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100 text-center">计划支数</th>
+                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100 text-center">已完成</th>
+                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100 text-center">完成率</th>
+                                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 border-b border-slate-100">状态</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-50">
+                                    {order.items.map(item => {
+                                      const itemProgress = item.plannedQuantity > 0 
+                                        ? Math.round((item.producedQuantity / item.plannedQuantity) * 100) 
+                                        : 0;
+                                      return (
+                                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                                          <td className="px-4 py-3">
+                                            <div className="font-medium text-slate-700">{item.spec}</div>
+                                            <div className="text-xs text-slate-500">{item.level}级</div>
+                                          </td>
+                                          <td className="px-4 py-3 text-slate-600">
+                                            <div className="text-xs">{item.interfaceType}</div>
+                                            <div className="text-xs text-slate-400">{item.lining}</div>
+                                          </td>
+                                          <td className="px-4 py-3 text-center font-medium text-slate-700">
+                                            {item.plannedQuantity}
+                                          </td>
+                                          <td className="px-4 py-3 text-center text-slate-600">
+                                            {item.producedQuantity}
+                                          </td>
+                                          <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2 justify-center">
+                                              <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div 
+                                                  className={`h-full rounded-full ${itemProgress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} 
+                                                  style={{ width: `${itemProgress}%` }} 
+                                                />
+                                              </div>
+                                              <span className="text-xs text-slate-400 w-8">{itemProgress}%</span>
+                                            </div>
+                                          </td>
+                                          <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                              ${itemProgress === 100 ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                              {itemProgress === 100 ? '已完成' : '生产中'}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* Mobile Card View */}
-        <div className="md:hidden divide-y divide-gray-100">
-          {filteredOrders.length === 0 ? (
-            <div className="px-6 py-8 text-center text-gray-400">没有找到匹配的订单</div>
-          ) : (
-            filteredOrders.map(order => {
-              const totalPlan = order.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
-              const totalDone = order.items.reduce((acc, i) => acc + i.producedQuantity, 0);
-              const progress = totalPlan > 0 ? Math.round((totalDone / totalPlan) * 100) : 0;
-              
-              return (
-                <div key={order.id} className="p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-bold text-gray-900">{order.orderNo}</div>
-                      <div className="text-sm text-gray-500">{order.customerName || '-'}</div>
-                    </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${order.status === 'new' ? 'bg-blue-100 text-blue-800' : 
-                        order.status === 'in_production' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'production_completed' ? 'bg-teal-100 text-teal-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {order.status === 'new' ? '新建' : 
-                       order.status === 'in_production' ? '生产中' :
-                       order.status === 'production_completed' ? '完成' : order.status}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                     <div className="flex justify-between text-xs text-gray-500">
-                        <span>交货: {order.deliveryDate || '-'}</span>
-                        <span>进度: {progress}% ({totalDone}/{totalPlan})</span>
-                     </div>
-                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }} />
-                     </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-2">
-                     <button 
-                        onClick={() => setShowQRCode(order.id)}
-                        className="text-gray-400 hover:text-gray-600"
-                     >
-                        <QrCode className="h-5 w-5" />
-                     </button>
-                     <button 
-                        onClick={() => toggleExpand(order.id)}
-                        className="text-gray-400 hover:text-blue-600 flex items-center gap-1 text-xs"
-                     >
-                        {expandedOrders.has(order.id) ? '收起' : '明细'}
-                        {expandedOrders.has(order.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                     </button>
-                     {canEdit && (
-                        <>
-                          <button onClick={() => handleEdit(order)} className="text-blue-600 hover:text-blue-700">
-                            <Edit className="h-5 w-5" />
-                          </button>
-                          <button onClick={() => handleDelete(order.id)} className="text-red-600 hover:text-red-700">
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </>
-                     )}
-                  </div>
-
-                  {expandedOrders.has(order.id) && (
-                    <div className="mt-3 bg-gray-50 rounded-lg p-3 text-xs space-y-2">
-                      {order.items.map(item => (
-                        <div key={item.id} className="flex justify-between border-b border-gray-200 last:border-0 pb-2 last:pb-0">
-                           <div>
-                              <div className="font-medium">{item.spec} / {item.level}</div>
-                              <div className="text-gray-500">{item.interfaceType} {item.lining}</div>
-                           </div>
-                           <div className="text-right">
-                              <div>计划: {item.plannedQuantity}</div>
-                              <div className="text-green-600">已产: {item.producedQuantity}</div>
-                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
         </div>
       </div>
 
       {isFormOpen && (
         <OrderForm 
           initialData={editingOrder} 
-          onClose={() => { setIsFormOpen(false); setEditingOrder(undefined); }} 
-          onSubmit={handleCreate} 
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingOrder(undefined);
+          }} 
+          onSubmit={handleCreate}
         />
       )}
 
       {showQRCode && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowQRCode(null)}>
-          <div className="bg-white p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-800">订单追踪二维码</h3>
-            <div className="p-4 bg-white border border-gray-200 rounded-lg">
-               <QRCodeCanvas value={`${window.location.origin}/track/${showQRCode}`} size={200} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowQRCode(null)}>
+          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">订单二维码</h3>
+            <p className="text-slate-500 text-sm mb-6">扫描二维码查看订单详情</p>
+            <div className="flex justify-center bg-white p-4 rounded-xl border border-slate-100 shadow-inner mb-6">
+              <QRCodeCanvas value={showQRCode} size={200} level="H" />
             </div>
-            <p className="text-sm text-gray-500 text-center max-w-xs">
-              客户扫描此二维码即可无需登录直接查询订单生产进度
-            </p>
+            <div className="text-xs text-slate-400 mb-6 font-mono break-all px-4">
+              ID: {showQRCode}
+            </div>
             <button 
               onClick={() => setShowQRCode(null)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
+              className="w-full py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-medium transition-colors"
             >
               关闭
             </button>

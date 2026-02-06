@@ -50,49 +50,66 @@ export default function Layout() {
   const filteredNavItems = navItems.filter(item => item.roles.includes(currentUser.role));
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-blue-700 flex items-center gap-2">
-            <Factory className="h-6 w-6" />
-            安钢永通订单
-          </h1>
-          {!isOnline && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-              <WifiOff className="h-3 w-3" />
-              离线模式
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+      {/* Sidebar Desktop - Modern Dark Theme */}
+      <aside className="hidden md:flex flex-col w-72 bg-slate-900 text-white shadow-xl z-20 transition-all duration-300">
+        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-500/20">
+             <Factory className="h-6 w-6 text-white" />
+          </div>
+          <div>
+             <h1 className="text-lg font-bold tracking-tight">安钢永通</h1>
+             <p className="text-xs text-slate-400 font-medium tracking-wide">智能订单管理系统</p>
+          </div>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {filteredNavItems.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={clsx(
-                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                location.pathname === item.path
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-700 hover:bg-gray-100"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          ))}
+        
+        {!isOnline && (
+            <div className="mx-6 mt-4 flex items-center gap-2 text-xs text-red-200 bg-red-900/30 border border-red-800 px-3 py-2 rounded-lg">
+              <WifiOff className="h-3 w-3" />
+              <span>离线模式运行中</span>
+            </div>
+        )}
+
+        <nav className="flex-1 p-4 space-y-1.5 mt-2">
+          {filteredNavItems.map(item => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={clsx(
+                  "flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group relative overflow-hidden",
+                  isActive
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <item.icon className={clsx("h-5 w-5 transition-transform duration-200", isActive ? "scale-110" : "group-hover:scale-110")} />
+                <span className="relative z-10">{item.label}</span>
+                {isActive && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white/20 rounded-l-full" />}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <UserCircle className="h-8 w-8 text-gray-400" />
-            <div>
-              <p className="text-sm font-medium text-gray-900">{currentUser.name}</p>
-              <p className="text-xs text-gray-500">{currentUser.role === 'admin' ? '管理员' : currentUser.role === 'order_entry' ? '录入员' : '生产员'}</p>
+        
+        <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+          <div className="flex items-center gap-3 mb-4 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer group">
+            <div className="relative">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg">
+                    {currentUser.name.charAt(0)}
+                </div>
+                <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-slate-900 rounded-full"></div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate group-hover:text-blue-400 transition-colors">{currentUser.name}</p>
+              <p className="text-xs text-slate-400 truncate">
+                  {currentUser.role === 'admin' ? '系统管理员' : currentUser.role === 'order_entry' ? '订单录入员' : '生产主管'}
+              </p>
             </div>
           </div>
           <button
             onClick={() => { logout(); navigate('/login'); }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-red-400 hover:text-white hover:bg-red-600/20 border border-transparent hover:border-red-600/30 rounded-xl transition-all duration-200"
           >
             <LogOut className="h-4 w-4" />
             退出登录
@@ -100,8 +117,8 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center justify-between px-4">
+      {/* Mobile Header - Glassmorphism */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50 flex items-center justify-between px-4 shadow-sm">
         <div className="flex flex-col">
           <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
             <Factory className="h-5 w-5" />
