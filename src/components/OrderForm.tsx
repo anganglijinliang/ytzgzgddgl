@@ -1,3 +1,4 @@
+import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Order } from '@/types';
 import { useStore } from '@/store/useStore';
@@ -256,7 +257,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">规格</label>
-                      <DatalistInput 
+                      <SmartCombobox 
                         name={`items.${index}.spec`} 
                         options={masterData.specs} 
                         placeholder="规格" 
@@ -266,7 +267,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">级别</label>
-                      <DatalistInput 
+                      <SmartCombobox 
                         name={`items.${index}.level`} 
                         options={masterData.levels} 
                         placeholder="级别" 
@@ -275,19 +276,19 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">接口</label>
-                      <DatalistInput name={`items.${index}.interfaceType`} options={masterData.interfaces} placeholder="接口" />
+                      <SmartCombobox name={`items.${index}.interfaceType`} options={masterData.interfaces} placeholder="接口" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">内衬</label>
-                      <DatalistInput name={`items.${index}.lining`} options={masterData.linings} placeholder="内衬" />
+                      <SmartCombobox name={`items.${index}.lining`} options={masterData.linings} placeholder="内衬" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">长度</label>
-                      <DatalistInput name={`items.${index}.length`} options={masterData.lengths} placeholder="长度" />
+                      <SmartCombobox name={`items.${index}.length`} options={masterData.lengths} placeholder="长度" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">防腐</label>
-                      <DatalistInput name={`items.${index}.coating`} options={masterData.coatings} placeholder="防腐" />
+                      <SmartCombobox name={`items.${index}.coating`} options={masterData.coatings} placeholder="防腐" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">计划支数 *</label>

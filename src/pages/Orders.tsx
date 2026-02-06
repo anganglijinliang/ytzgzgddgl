@@ -337,7 +337,7 @@ export default function Orders() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -464,6 +464,91 @@ export default function Orders() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {filteredOrders.length === 0 ? (
+            <div className="px-6 py-8 text-center text-gray-400">没有找到匹配的订单</div>
+          ) : (
+            filteredOrders.map(order => {
+              const totalPlan = order.items.reduce((acc, i) => acc + i.plannedQuantity, 0);
+              const totalDone = order.items.reduce((acc, i) => acc + i.producedQuantity, 0);
+              const progress = totalPlan > 0 ? Math.round((totalDone / totalPlan) * 100) : 0;
+              
+              return (
+                <div key={order.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-bold text-gray-900">{order.orderNo}</div>
+                      <div className="text-sm text-gray-500">{order.customerName || '-'}</div>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      ${order.status === 'new' ? 'bg-blue-100 text-blue-800' : 
+                        order.status === 'in_production' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'production_completed' ? 'bg-teal-100 text-teal-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {order.status === 'new' ? '新建' : 
+                       order.status === 'in_production' ? '生产中' :
+                       order.status === 'production_completed' ? '完成' : order.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                     <div className="flex justify-between text-xs text-gray-500">
+                        <span>交货: {order.deliveryDate || '-'}</span>
+                        <span>进度: {progress}% ({totalDone}/{totalPlan})</span>
+                     </div>
+                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }} />
+                     </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                     <button 
+                        onClick={() => setShowQRCode(order.id)}
+                        className="text-gray-400 hover:text-gray-600"
+                     >
+                        <QrCode className="h-5 w-5" />
+                     </button>
+                     <button 
+                        onClick={() => toggleExpand(order.id)}
+                        className="text-gray-400 hover:text-blue-600 flex items-center gap-1 text-xs"
+                     >
+                        {expandedOrders.has(order.id) ? '收起' : '明细'}
+                        {expandedOrders.has(order.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                     </button>
+                     {canEdit && (
+                        <>
+                          <button onClick={() => handleEdit(order)} className="text-blue-600 hover:text-blue-700">
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button onClick={() => handleDelete(order.id)} className="text-red-600 hover:text-red-700">
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                     )}
+                  </div>
+
+                  {expandedOrders.has(order.id) && (
+                    <div className="mt-3 bg-gray-50 rounded-lg p-3 text-xs space-y-2">
+                      {order.items.map(item => (
+                        <div key={item.id} className="flex justify-between border-b border-gray-200 last:border-0 pb-2 last:pb-0">
+                           <div>
+                              <div className="font-medium">{item.spec} / {item.level}</div>
+                              <div className="text-gray-500">{item.interfaceType} {item.lining}</div>
+                           </div>
+                           <div className="text-right">
+                              <div>计划: {item.plannedQuantity}</div>
+                              <div className="text-green-600">已产: {item.producedQuantity}</div>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
