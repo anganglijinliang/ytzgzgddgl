@@ -64,6 +64,7 @@ export const handler = async (event, context) => {
         if (process === 'pulling') updateColumn = 'pulling_quantity';
         else if (process === 'hydrostatic') updateColumn = 'hydrostatic_quantity';
         else if (process === 'lining') updateColumn = 'lining_quantity';
+        else if (process === 'coating') updateColumn = 'coating_quantity';
         // 'packaging' or others -> 'produced_quantity'
 
         // Update SubOrder quantity

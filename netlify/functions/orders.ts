@@ -50,6 +50,7 @@ export const handler = async (event, context) => {
             pullingQuantity: item.pulling_quantity || 0,
             hydrostaticQuantity: item.hydrostatic_quantity || 0,
             liningQuantity: item.lining_quantity || 0,
+            coatingQuantity: item.coating_quantity || 0,
             status: item.status
           }))
         }));

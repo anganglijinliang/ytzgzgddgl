@@ -71,6 +71,21 @@ CREATE TABLE IF NOT EXISTS production_records (
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Production Plans Table (Dispatcher -> Workshop)
+CREATE TABLE IF NOT EXISTS production_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES orders(id),
+    sub_order_id UUID REFERENCES sub_orders(id),
+    workshop TEXT NOT NULL,
+    team TEXT,
+    shift TEXT,
+    planned_date DATE,
+    quantity INTEGER NOT NULL,
+    process TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Migration for existing tables (Idempotent)
 DO $$
 BEGIN
@@ -91,6 +106,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='lining_quantity') THEN
         ALTER TABLE sub_orders ADD COLUMN lining_quantity INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='coating_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN coating_quantity INTEGER DEFAULT 0;
     END IF;
 END $$;
 

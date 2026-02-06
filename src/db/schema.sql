@@ -45,6 +45,10 @@ CREATE TABLE IF NOT EXISTS sub_orders (
     total_weight NUMERIC(12, 3),
     batch_no TEXT,
     produced_quantity INTEGER DEFAULT 0,
+    pulling_quantity INTEGER DEFAULT 0, -- 拉管
+    hydrostatic_quantity INTEGER DEFAULT 0, -- 水压
+    lining_quantity INTEGER DEFAULT 0, -- 衬管
+    coating_quantity INTEGER DEFAULT 0, -- 外防
     status TEXT NOT NULL DEFAULT 'new'
 );
 
@@ -62,6 +66,21 @@ CREATE TABLE IF NOT EXISTS production_records (
     heat_no TEXT, -- 炉号
     process TEXT DEFAULT 'packaging', -- 工序: pulling, hydrostatic, lining, packaging
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Production Plans Table (Dispatcher -> Workshop)
+CREATE TABLE IF NOT EXISTS production_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES orders(id),
+    sub_order_id UUID REFERENCES sub_orders(id),
+    workshop TEXT NOT NULL,
+    team TEXT,
+    shift TEXT,
+    planned_date DATE,
+    quantity INTEGER NOT NULL,
+    process TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 /*

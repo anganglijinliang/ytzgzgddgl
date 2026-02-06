@@ -44,6 +44,7 @@ export interface SubOrder {
   pullingQuantity?: number; // 拉管支数
   hydrostaticQuantity?: number; // 水压支数
   liningQuantity?: number; // 衬管支数
+  coatingQuantity?: number; // 外防支数
   status: OrderStatus;
 }
 

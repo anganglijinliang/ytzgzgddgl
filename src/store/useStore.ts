@@ -153,20 +153,28 @@ export const useStore = create<AppState>()(
       fetchInitialData: async () => {
         set({ isLoading: true, error: null });
         try {
-          const [ordersRes, prodRes, usersRes] = await Promise.all([
+          const [ordersRes, prodRes, usersRes, plansRes] = await Promise.all([
             fetch('/.netlify/functions/orders'),
             fetch('/.netlify/functions/production'),
-            fetch('/.netlify/functions/users')
+            fetch('/.netlify/functions/users'),
+            fetch('/.netlify/functions/plans')
           ]);
 
           if (ordersRes.ok && prodRes.ok) {
             const orders = await ordersRes.json();
             const productionRecords = await prodRes.json();
-            const users = usersRes.ok ? await usersRes.json() : []; // Users might fail if table empty/not migrated yet
+            const users = usersRes.ok ? await usersRes.json() : [];
+            const plans = plansRes.ok ? await plansRes.json() : [];
             
-            set({ orders, productionRecords, users: users.length ? users : (get().users.length ? get().users : MOCK_USERS), isLoading: false });
+            set({ 
+                orders, 
+                productionRecords, 
+                plans,
+                users: users.length ? users : (get().users.length ? get().users : MOCK_USERS), 
+                isLoading: false 
+            });
           } else {
-             // Fallback for demo if API fails (e.g. no DB connection yet)
+             // Fallback for demo if API fails
              console.warn('API fetch failed, using local fallback');
              set({ isLoading: false, users: get().users.length ? get().users : MOCK_USERS });
           }
@@ -409,20 +417,58 @@ export const useStore = create<AppState>()(
       },
       
       addPlan: async (planData) => {
-        const newPlan: ProductionPlan = {
-          ...planData,
-          id: uuidv4(),
-          status: 'pending'
-        };
-        set(state => ({ plans: [newPlan, ...state.plans] }));
-        return true;
+        set({ isLoading: true });
+        try {
+            // Optimistic update
+            const tempId = uuidv4();
+            const newPlan: ProductionPlan = {
+              ...planData,
+              id: tempId,
+              status: 'pending'
+            };
+            set(state => ({ plans: [newPlan, ...state.plans] }));
+
+            const response = await fetch('/.netlify/functions/plans', {
+                method: 'POST',
+                body: JSON.stringify(planData)
+            });
+
+            if (!response.ok) throw new Error('Failed to create plan');
+            
+            const result = await response.json();
+            
+            // Update with real ID
+            set(state => ({
+                plans: state.plans.map(p => p.id === tempId ? { ...p, id: result.id } : p),
+                isLoading: false
+            }));
+            
+            return true;
+        } catch (error) {
+            console.error('Failed to add plan:', error);
+            // Revert optimistic update? Or just show error?
+            // For now, keep it simple
+            set({ isLoading: false });
+            return false;
+        }
       },
 
       updatePlan: async (id, updates) => {
+        // Optimistic
         set(state => ({
           plans: state.plans.map(p => p.id === id ? { ...p, ...updates } : p)
         }));
-        return true;
+
+        try {
+            await fetch('/.netlify/functions/plans', {
+                method: 'PUT',
+                body: JSON.stringify({ id, ...updates })
+            });
+            return true;
+        } catch (error) {
+            console.error('Failed to update plan:', error);
+            return false;
+        }
       },
 
       updateMasterData: (key, value) => {

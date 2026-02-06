@@ -20,16 +20,29 @@ const WorkshopView = ({
   currentUser, orders, plans, addProductionRecord, updatePlan 
 }: any) => {
   const { showToast } = useToast();
-  // ... (State from original file)
+  
+  // Constants for Localization
+  const PROCESS_MAP: Record<string, string> = {
+    pulling: '拉管工序',
+    hydrostatic: '水压试验',
+    lining: '内衬工序',
+    coating: '外防工序',
+    packaging: '打包入库'
+  };
+
+  const TEAMS = ['甲班', '乙班', '丙班', '丁班'];
+  const SHIFTS = ['白班', '夜班'];
+
+  // State
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedSubOrder, setSelectedSubOrder] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
 
   const [quantity, setQuantity] = useState<number>(0);
   const [team, setTeam] = useState<string>(localStorage.getItem('prod_team') || '甲班');
-  const [shift] = useState<string>(localStorage.getItem('prod_shift') || '白班');
+  const [shift, setShift] = useState<string>(localStorage.getItem('prod_shift') || '白班');
   const [workshop] = useState<string>(localStorage.getItem('prod_workshop') || '一车间');
-  const [recordDate] = useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
+  const [recordDate, setRecordDate] = useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
   const [heatNo] = useState<string>('');
   const [process, setProcess] = useState<string>(localStorage.getItem('prod_process') || 'pulling');
   
@@ -81,6 +94,7 @@ const WorkshopView = ({
     }
 
     const now = new Date();
+    // Use the selected recordDate but keep current time
     const [y, m, d] = recordDate.split('-').map(Number);
     const recordTimestamp = new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 
@@ -113,33 +127,48 @@ const WorkshopView = ({
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-slate-50 flex flex-col overflow-hidden">
-      {/* Top Bar */}
-      <div className="bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10">
-        <div className="flex items-center gap-4">
-            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                <Factory size={24} />
+    <div className="h-[calc(100vh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans">
+      {/* Top Bar - Industrial Style */}
+      <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md z-20 shrink-0">
+        <div className="flex items-center gap-6">
+            <div className="p-2.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-900/50">
+                <Factory size={28} className="text-white" />
             </div>
             <div>
-                <h1 className="text-xl font-bold text-slate-800">车间生产终端</h1>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>{workshop}</span>
-                    <span>•</span>
-                    <span>{process === 'pulling' ? '拉管' : process === 'hydrostatic' ? '水压' : process === 'lining' ? '衬里' : '打包'}</span>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-100">智能车间终端</h1>
+                <div className="flex items-center gap-3 text-sm text-slate-400 mt-0.5">
+                    <span className="font-medium text-slate-300">{workshop}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                    <span className="text-blue-400 font-bold">{PROCESS_MAP[process] || process}</span>
                 </div>
             </div>
         </div>
+        
         <div className="flex items-center gap-4">
-            <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
-                <div className="px-3 py-1 bg-white rounded shadow-sm text-sm font-medium text-slate-700">{team}</div>
-                <div className="px-3 py-1 bg-white rounded shadow-sm text-sm font-medium text-slate-700">{shift}</div>
-                <div className="px-3 py-1 bg-white rounded shadow-sm text-sm font-medium text-slate-700">{recordDate}</div>
+            {/* Status Indicators */}
+            <div className="flex bg-slate-800 p-1.5 rounded-xl border border-slate-700/50">
+                <div className="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-300 border-r border-slate-700/50">
+                  <span className="text-slate-500 mr-2">班组</span>
+                  <span className="text-white">{team}</span>
+                </div>
+                <div className="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-300 border-r border-slate-700/50">
+                  <span className="text-slate-500 mr-2">班次</span>
+                  <span className="text-white">{shift}</span>
+                </div>
+                <button 
+                    onClick={() => setShowSettings(true)}
+                    className="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-300 flex items-center gap-2 hover:bg-slate-800 transition-colors cursor-pointer border-l border-slate-700/50"
+                >
+                   <Calendar size={14} className="text-slate-500" />
+                   <span className="text-white font-mono">{recordDate}</span>
+                </button>
             </div>
+
             <button 
                 onClick={() => setShowSettings(true)}
-                className="p-3 hover:bg-slate-100 rounded-xl transition-colors"
+                className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all border border-slate-700/50 active:scale-95"
             >
-                <Settings className="w-6 h-6 text-slate-600" />
+                <Settings className="w-6 h-6" />
             </button>
         </div>
       </div>
@@ -147,19 +176,23 @@ const WorkshopView = ({
       <div className="flex-1 flex overflow-hidden relative">
         {/* Left: Task List */}
         <div className={clsx(
-            "flex-col bg-white border-r transition-all duration-300 absolute inset-0 z-10 md:static md:w-1/3 md:flex",
+            "flex-col bg-white border-r border-slate-200 transition-all duration-300 absolute inset-0 z-10 md:static md:w-96 md:flex shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]",
             selectedPlanId ? "hidden md:flex" : "flex"
         )}>
-            <div className="p-4 border-b bg-slate-50/50">
-                <h3 className="font-bold text-slate-700 flex items-center gap-2">
-                    <ListTodo size={18} />
-                    待办任务 ({availablePlans.length})
+            <div className="p-5 border-b border-slate-100 bg-slate-50/80 backdrop-blur">
+                <h3 className="font-bold text-slate-700 flex items-center gap-2.5 text-lg">
+                    <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                        <ListTodo size={20} />
+                    </div>
+                    待办任务 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">{availablePlans.length}</span>
                 </h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
                 {availablePlans.length === 0 ? (
-                    <div className="text-center py-10 text-slate-400">
-                        <p>暂无生产任务</p>
+                    <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                        <Package size={48} className="mb-4 text-slate-200" />
+                        <p className="font-medium">暂无生产任务</p>
+                        <p className="text-sm mt-1">请等待调度下发</p>
                     </div>
                 ) : (
                     availablePlans.map((plan: ProductionPlan) => {
@@ -172,27 +205,37 @@ const WorkshopView = ({
                                 key={plan.id}
                                 onClick={() => handleSelectPlan(plan)}
                                 className={clsx(
-                                    "p-4 rounded-xl border-2 cursor-pointer transition-all",
+                                    "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group",
                                     selectedPlanId === plan.id 
-                                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200" 
-                                        : "border-slate-100 hover:border-blue-200 hover:bg-slate-50"
+                                        ? "border-blue-600 bg-white shadow-lg shadow-blue-900/5 scale-[1.02] z-10" 
+                                        : "border-white bg-white shadow-sm hover:border-blue-200 hover:shadow-md"
                                 )}
                             >
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="font-bold text-slate-800">{order.orderNo}</span>
-                                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold">
+                                <div className="flex justify-between items-start mb-3">
+                                    <span className="font-black text-slate-800 text-lg tracking-tight">{order.orderNo}</span>
+                                    <span className={clsx(
+                                        "px-2.5 py-1 rounded-lg text-xs font-bold font-mono",
+                                        selectedPlanId === plan.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
+                                    )}>
                                         x{plan.quantity}
                                     </span>
                                 </div>
-                                <div className="text-sm text-slate-600 space-y-1">
-                                    <div className="flex justify-between">
-                                        <span>规格: {item.spec}</span>
-                                        <span>{item.level}</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                        <span className="px-1.5 py-0.5 bg-slate-100 rounded text-xs text-slate-500">规格</span>
+                                        {item.spec}
                                     </div>
-                                    <div className="text-xs text-slate-400">
-                                        {plan.team} / {plan.shift}
+                                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                                        <span className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-500">{item.level}</span>
+                                        <span>•</span>
+                                        <span>{plan.team}</span>
+                                        <span>•</span>
+                                        <span>{plan.shift}</span>
                                     </div>
                                 </div>
+                                {selectedPlanId === plan.id && (
+                                    <div className="absolute left-0 top-4 bottom-4 w-1 bg-blue-600 rounded-r-full" />
+                                )}
                             </div>
                         );
                     })
@@ -202,82 +245,114 @@ const WorkshopView = ({
 
         {/* Right: Operation Area */}
         <div className={clsx(
-            "flex-1 bg-slate-50 flex-col absolute inset-0 z-20 md:static md:flex",
+            "flex-1 bg-slate-100 flex-col absolute inset-0 z-20 md:static md:flex",
             selectedPlanId ? "flex" : "hidden"
         )}>
             {/* Mobile Back Button */}
-            <div className="md:hidden bg-white border-b px-4 py-3 flex items-center gap-2">
+            <div className="md:hidden bg-white border-b px-4 py-3 flex items-center gap-2 shadow-sm">
                 <button 
                     onClick={() => { setSelectedPlanId(''); setSelectedSubOrder(''); }}
-                    className="p-2 -ml-2 hover:bg-slate-100 rounded-lg"
+                    className="p-2 -ml-2 hover:bg-slate-100 rounded-lg active:bg-slate-200"
                 >
                     <ArrowRight className="rotate-180 w-6 h-6 text-slate-600" />
                 </button>
                 <span className="font-bold text-slate-800">返回任务列表</span>
             </div>
 
-            <div className="flex-1 bg-slate-50 p-4 md:p-6 flex flex-col overflow-y-auto">
-            {/* Info Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6 flex-shrink-0">
+            <div className="flex-1 p-4 md:p-8 flex flex-col overflow-y-auto max-w-5xl mx-auto w-full">
+            {/* Info Card - Industrial Design */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex-shrink-0">
                 {selectedOrder && selectedSubOrder ? (
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <div className="text-sm text-slate-500 mb-1">当前生产</div>
-                            <div className="text-2xl font-black text-slate-800 mb-1">{selectedOrder.orderNo}</div>
-                            <div className="text-slate-600 font-medium">
+                    <div className="flex flex-col md:flex-row">
+                        <div className="flex-1 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-100">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-md uppercase tracking-wider">生产中</span>
+                                <span className="text-slate-400 text-sm font-medium">订单编号</span>
+                            </div>
+                            <div className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">{selectedOrder.orderNo}</div>
+                            <div className="grid grid-cols-2 gap-4">
                                 {(() => {
                                     const item = selectedOrder.items.find(i => i.id === selectedSubOrder);
-                                    return item ? `${item.spec} · ${item.level} · ${item.interfaceType} · ${item.length}` : '-';
+                                    if (!item) return null;
+                                    return (
+                                        <>
+                                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                <div className="text-xs text-slate-500 mb-1">规格型号</div>
+                                                <div className="font-bold text-slate-700">{item.spec}</div>
+                                            </div>
+                                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                <div className="text-xs text-slate-500 mb-1">等级/长度</div>
+                                                <div className="font-bold text-slate-700">{item.level} / {item.length}</div>
+                                            </div>
+                                        </>
+                                    );
                                 })()}
                             </div>
                         </div>
-                        <div className="text-right">
-                             <div className="text-sm text-slate-500 mb-1">本次录入数量</div>
-                             <div className="text-5xl font-black text-blue-600 font-mono tracking-tighter">
+                        <div className="md:w-72 p-6 md:p-8 bg-slate-50/50 flex flex-col justify-center items-center md:items-end border-l border-slate-100">
+                             <div className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wide">本次录入数量</div>
+                             <div className={clsx(
+                                 "text-7xl font-black font-mono tracking-tighter transition-all",
+                                 quantity > 0 ? "text-blue-600" : "text-slate-300"
+                             )}>
                                 {quantity}
                              </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="h-24 flex items-center justify-center text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-xl">
-                        请从左侧选择任务或直接扫码
+                    <div className="h-48 flex flex-col items-center justify-center text-slate-400 font-medium bg-slate-50/50">
+                        <div className="p-4 bg-white rounded-full shadow-sm mb-3">
+                            <ClipboardList size={32} className="text-slate-300" />
+                        </div>
+                        <p>请从左侧选择任务开始生产</p>
                     </div>
                 )}
             </div>
 
             {/* Numpad Area */}
-            <div className="flex-1 flex gap-6">
-                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-                     {/* NumPad Component */}
-                     <div className="grid grid-cols-3 gap-3 h-full">
+            <div className="flex-1 flex gap-4 md:gap-8 min-h-[400px]">
+                <div className="flex-1 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6">
+                     {/* Modern NumPad */}
+                     <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                             <button
                                 key={num}
                                 onClick={() => handleNumInput(num)}
-                                className="bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 text-3xl font-bold text-slate-700 rounded-xl transition-all active:scale-95 flex items-center justify-center shadow-sm"
+                                className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-3xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
                             >
                                 {num}
                             </button>
                         ))}
-                        <button onClick={handleClear} className="bg-red-50 border border-red-100 text-red-500 text-xl font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all flex items-center justify-center">
+                        <button 
+                            onClick={handleClear} 
+                            className="bg-red-50 border-b-4 border-red-100 text-red-500 text-xl font-bold rounded-2xl hover:bg-red-100 hover:border-red-200 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+                        >
                             清空
                         </button>
-                        <button onClick={() => handleNumInput(0)} className="bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 text-3xl font-bold text-slate-700 rounded-xl transition-all active:scale-95 flex items-center justify-center shadow-sm">
+                        <button 
+                            onClick={() => handleNumInput(0)} 
+                            className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-3xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
+                        >
                             0
                         </button>
-                        <button onClick={handleBackspace} className="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 text-xl font-bold rounded-xl active:scale-95 transition-all flex items-center justify-center">
+                        <button 
+                            onClick={handleBackspace} 
+                            className="bg-slate-100 border-b-4 border-slate-200 hover:bg-slate-200 text-slate-600 text-xl font-bold rounded-2xl active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+                        >
                             ⌫
                         </button>
                     </div>
                 </div>
-                <div className="w-48 flex flex-col">
+                <div className="w-32 md:w-48 flex flex-col">
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-2xl font-bold rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex flex-col items-center justify-center gap-2"
+                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl md:text-2xl font-bold rounded-3xl shadow-xl shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-col items-center justify-center gap-4 group"
                     >
-                        <CheckCircle2 size={48} />
-                        <span>提交</span>
+                        <div className="p-3 bg-blue-500 rounded-full group-hover:scale-110 transition-transform">
+                            <CheckCircle2 size={40} className="md:w-12 md:h-12" />
+                        </div>
+                        <span>确认提交</span>
                     </button>
                 </div>
             </div>
@@ -285,34 +360,99 @@ const WorkshopView = ({
       </div>
       </div>
 
-      {/* Settings Modal (Simplified) */}
+      {/* Settings Modal (Enhanced) */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-           <div className="bg-white rounded-2xl w-[500px] p-6 shadow-2xl">
-               <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-xl font-bold">生产环境设置</h3>
-                   <button onClick={() => setShowSettings(false)}><X /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                   <h3 className="text-xl font-bold text-slate-800">终端设置</h3>
+                   <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X className="text-slate-500" /></button>
                </div>
-               {/* ... Keep existing settings inputs but cleaner ... */}
-               <div className="space-y-4">
+               
+               <div className="p-8 space-y-8">
+                   {/* Date Setting */}
                    <div>
-                       <label className="block text-sm font-bold text-slate-700 mb-2">生产班组</label>
-                       <div className="grid grid-cols-4 gap-2">
-                           {['甲班', '乙班', '丙班', '丁班'].map(t => (
-                               <button key={t} onClick={() => setTeam(t)} className={clsx("py-2 rounded border", team === t ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200")}>{t}</button>
+                       <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">生产日期</label>
+                       <div className="relative">
+                           <input 
+                               type="date" 
+                               value={recordDate}
+                               onChange={(e) => setRecordDate(e.target.value)}
+                               className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-colors"
+                           />
+                           <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                       </div>
+                   </div>
+
+                   {/* Team Setting */}
+                   <div>
+                       <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">生产班组</label>
+                       <div className="grid grid-cols-4 gap-3">
+                           {TEAMS.map(t => (
+                               <button 
+                                   key={t} 
+                                   onClick={() => setTeam(t)} 
+                                   className={clsx(
+                                       "py-3 rounded-xl border-2 font-bold transition-all", 
+                                       team === t 
+                                        ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200" 
+                                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                   )}
+                               >
+                                   {t}
+                               </button>
                            ))}
                        </div>
                    </div>
+                   
+                   {/* Shift Setting */}
+                    <div>
+                       <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">班次</label>
+                       <div className="grid grid-cols-2 gap-3">
+                           {SHIFTS.map(s => (
+                               <button 
+                                   key={s} 
+                                   onClick={() => setShift(s)} 
+                                   className={clsx(
+                                       "py-3 rounded-xl border-2 font-bold transition-all", 
+                                       shift === s 
+                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200" 
+                                        : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300"
+                                   )}
+                               >
+                                   {s}
+                               </button>
+                           ))}
+                       </div>
+                   </div>
+
+                   {/* Process Setting */}
                    <div>
-                       <label className="block text-sm font-bold text-slate-700 mb-2">工序</label>
-                       <div className="grid grid-cols-2 gap-2">
-                           {['pulling', 'hydrostatic', 'lining', 'packaging'].map(p => (
-                               <button key={p} onClick={() => setProcess(p)} className={clsx("py-2 rounded border", process === p ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200")}>{p === 'pulling' ? '拉管' : p}</button>
+                       <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">当前工序</label>
+                       <div className="grid grid-cols-2 gap-3">
+                           {Object.entries(PROCESS_MAP).map(([key, label]) => (
+                               <button 
+                                   key={key} 
+                                   onClick={() => setProcess(key)} 
+                                   className={clsx(
+                                       "py-4 px-4 rounded-xl border-2 font-bold transition-all flex items-center justify-center gap-2", 
+                                       process === key 
+                                        ? "bg-slate-800 text-white border-slate-800 shadow-lg" 
+                                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                                   )}
+                               >
+                                   {label}
+                               </button>
                            ))}
                        </div>
                    </div>
                </div>
-               <button onClick={() => setShowSettings(false)} className="w-full mt-6 py-3 bg-blue-600 text-white rounded-xl font-bold">完成</button>
+               
+               <div className="p-6 border-t border-slate-100 bg-slate-50">
+                   <button onClick={() => setShowSettings(false)} className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-200 transition-all active:scale-95">
+                       保存设置
+                   </button>
+               </div>
            </div>
         </div>
       )}
@@ -322,16 +462,19 @@ const WorkshopView = ({
         {showSuccess && (
             <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             >
                 <motion.div 
-                    initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
-                    className="bg-white rounded-3xl p-10 flex flex-col items-center shadow-2xl"
+                    initial={{ scale: 0.8, opacity: 0, y: 20 }} 
+                    animate={{ scale: 1, opacity: 1, y: 0 }} 
+                    exit={{ scale: 0.8, opacity: 0, y: 20 }}
+                    className="bg-white rounded-[2rem] p-12 flex flex-col items-center shadow-2xl max-w-sm w-full mx-4"
                 >
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4">
-                        <CheckCircle2 size={48} />
+                    <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-6 shadow-inner">
+                        <CheckCircle2 size={56} strokeWidth={3} />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800">提交成功</h2>
+                    <h2 className="text-3xl font-black text-slate-800 mb-2">提交成功</h2>
+                    <p className="text-slate-500 font-medium">数据已同步至服务器</p>
                 </motion.div>
             </motion.div>
         )}
@@ -622,6 +765,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                                     <option value="pulling">拉管工序</option>
                                                     <option value="hydrostatic">水压工序</option>
                                                     <option value="lining">内衬工序</option>
+                                                    <option value="coating">外防工序</option>
                                                     <option value="packaging">打包入库</option>
                                                 </select>
                                             </div>
