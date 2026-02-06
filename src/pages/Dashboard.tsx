@@ -1,4 +1,3 @@
-import React from 'react';
 import { useStore } from '@/store/useStore';
 import { 
   Tooltip, 
@@ -13,34 +12,13 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
-import { FileText, Factory, Activity, Layers, Database, Loader2, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { FileText, Factory, Activity, Layers, Database, TrendingUp, CheckCircle2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useToast } from '@/context/ToastContext';
+import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
 export default function Dashboard() {
-  const { orders, productionRecords, isLoading, currentUser } = useStore();
-  const { showToast } = useToast();
-  const [isInitializing, setIsInitializing] = React.useState(false);
-
-  const handleInitDB = async () => {
-    if (!confirm('确定要初始化数据库吗？这将创建必要的表结构（如果不存在）。')) return;
-    
-    setIsInitializing(true);
-    try {
-      const res = await fetch('/.netlify/functions/init-db', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        showToast('数据库初始化成功', 'success');
-      } else {
-        showToast(`初始化失败: ${data.error}`, 'error');
-      }
-    } catch (error) {
-      showToast('初始化请求失败', 'error');
-    } finally {
-      setIsInitializing(false);
-    }
-  };
+  const { orders, productionRecords, isLoading } = useStore();
 
   if (isLoading && orders.length === 0) {
     return <LoadingSpinner />;
@@ -100,21 +78,28 @@ export default function Dashboard() {
   ].filter(d => d.value > 0);
 
   // WIP Data (Process Balance)
-  const processData = orders.reduce((acc, order) => {
+  const processTotals = orders.reduce((acc, order) => {
     order.items.forEach(item => {
       acc.pulling += (item.pullingQuantity || 0);
-      acc.hydro += (item.hydrostaticQuantity || 0);
+      acc.hydrostatic += (item.hydrostaticQuantity || 0);
       acc.lining += (item.liningQuantity || 0);
       acc.packaging += (item.producedQuantity || 0); 
     });
     return acc;
-  }, { pulling: 0, hydro: 0, lining: 0, packaging: 0 });
+  }, { pulling: 0, hydrostatic: 0, lining: 0, packaging: 0 });
+
+  const processData = [
+    {
+      name: '累计产量',
+      ...processTotals
+    }
+  ];
 
   const wipChartData = [
-    { name: '离心浇铸', total: processData.pulling, wip: Math.max(0, processData.pulling - processData.hydro) },
-    { name: '水压试验', total: processData.hydro, wip: Math.max(0, processData.hydro - processData.lining) },
-    { name: '内衬工序', total: processData.lining, wip: Math.max(0, processData.lining - processData.packaging) },
-    { name: '成品包装', total: processData.packaging, wip: 0 },
+    { name: '离心浇铸', total: processTotals.pulling, wip: Math.max(0, processTotals.pulling - processTotals.hydrostatic) },
+    { name: '水压试验', total: processTotals.hydrostatic, wip: Math.max(0, processTotals.hydrostatic - processTotals.lining) },
+    { name: '内衬工序', total: processTotals.lining, wip: Math.max(0, processTotals.lining - processTotals.packaging) },
+    { name: '成品包装', total: processTotals.packaging, wip: 0 },
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -124,7 +109,7 @@ export default function Dashboard() {
           <p className="font-bold text-slate-800 mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2 text-sm mb-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }}></div>
               <span className="text-slate-500">{entry.name}:</span>
               <span className="font-medium text-slate-800">{entry.value}</span>
             </div>
@@ -136,135 +121,168 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+    <div className="space-y-8 p-6">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-between items-end"
+      >
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">数字工厂概览</h2>
-          <p className="text-slate-500 mt-2 flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            实时监控生产瓶颈与质量追溯系统
-          </p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">仪表盘</h1>
+          <p className="text-slate-500 mt-2 font-medium">实时监控生产状态与订单进度</p>
         </div>
-        
-        {currentUser?.role === 'admin' && (
-          <button
-            onClick={handleInitDB}
-            disabled={isInitializing}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-blue-600 disabled:opacity-50 transition-all shadow-sm font-medium"
-          >
-            {isInitializing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Database className="h-4 w-4" />
-            )}
-            {isInitializing ? '初始化中...' : '初始化数据库'}
-          </button>
-        )}
-      </div>
+        <div className="text-sm text-slate-400 font-medium">
+          最后更新: {new Date().toLocaleTimeString()}
+        </div>
+      </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow group relative overflow-hidden">
-            <div className="flex justify-between items-start mb-4">
-              <div className={clsx("p-3 rounded-xl bg-gradient-to-br text-white shadow-lg shadow-blue-500/20", stat.color)}>
-                <stat.icon className="h-6 w-6" />
+        {stats.map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-xl transition-all hover:-translate-y-1 group relative overflow-hidden"
+          >
+            {/* Background Decoration */}
+            <div className={clsx("absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-10 blur-2xl transition-all group-hover:scale-150", stat.bgColor.replace('bg-', 'bg-gradient-to-br from-white to-'))}></div>
+            
+            <div className="flex justify-between items-start mb-4 relative z-10">
+              <div className={clsx("p-3 rounded-xl bg-gradient-to-br text-white shadow-lg", stat.color)}>
+                <stat.icon size={24} />
               </div>
-              <div className={clsx("flex items-center text-xs font-medium px-2 py-1 rounded-full", stat.bgColor, stat.textColor)}>
+              <span className={clsx("text-xs font-bold px-2 py-1 rounded-full", stat.bgColor, stat.textColor)}>
                 {stat.trend}
-              </div>
+              </span>
             </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">{stat.label}</p>
-              <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{stat.value}</h3>
-              <p className="text-xs text-slate-400 mt-2">{stat.desc}</p>
+            <div className="relative z-10">
+              <div className="text-slate-500 text-sm font-medium mb-1">{stat.label}</div>
+              <div className="text-3xl font-black text-slate-800 tracking-tight">{stat.value}</div>
+              <div className="text-xs text-slate-400 mt-2 font-medium">{stat.desc}</div>
             </div>
-            {/* Decorative background circle */}
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-slate-50 opacity-50 group-hover:scale-110 transition-transform duration-500" />
-          </div>
+          </motion.div>
         ))}
       </div>
 
-      {/* Charts Area */}
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* WIP / Process Balance Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-             <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">工序平衡与在制品 (WIP)</h3>
-                  <p className="text-xs text-slate-400">各工序累计产量与积压情况对比</p>
-                </div>
+        {/* Production Trend */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100"
+        >
+          <div className="flex justify-between items-center mb-8">
+             <div>
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <Activity className="text-blue-500" />
+                  生产趋势监控
+                </h3>
+                <p className="text-sm text-slate-400 mt-1">最近7天各工序产量统计</p>
              </div>
           </div>
-          <div className="h-80 w-full">
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={wipChartData} barSize={40}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                <Tooltip content={<CustomTooltip />} cursor={{fill: '#f8fafc'}} />
-                <Legend iconType="circle" wrapperStyle={{paddingTop: '20px'}} />
-                <Bar name="累计产量" dataKey="total" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
-                <Bar name="积压库存(WIP)" dataKey="wip" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                   {wipChartData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={['#3b82f6', '#f59e0b', '#fb923c', '#10b981'][index % 4]} />
-                    ))}
-                </Bar>
+              <BarChart data={processData} barSize={20}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                <Tooltip 
+                  cursor={{fill: '#f8fafc'}}
+                  content={<CustomTooltip />}
+                />
+                <Legend wrapperStyle={{paddingTop: '20px'}} />
+                <Bar name="拉管" dataKey="pulling" stackId="a" fill="#818cf8" radius={[0, 0, 0, 0]} />
+                <Bar name="水压" dataKey="hydrostatic" stackId="a" fill="#34d399" radius={[0, 0, 0, 0]} />
+                <Bar name="衬管" dataKey="lining" stackId="a" fill="#fbbf24" radius={[0, 0, 0, 0]} />
+                <Bar name="打包" dataKey="packaging" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Order Status Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
-             <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
-               <Layers className="h-5 w-5" />
-             </div>
-             <div>
-               <h3 className="text-lg font-bold text-slate-800">订单状态分布</h3>
-               <p className="text-xs text-slate-400">实时订单进度统计</p>
-             </div>
-          </div>
-          <div className="h-64 flex-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={orderStatusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {orderStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-             {orderStatusData.map((item, idx) => (
-               <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                 <div className="flex items-center gap-2">
-                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                   <span className="text-xs font-medium text-slate-600">{item.name}</span>
-                 </div>
-                 <span className="text-sm font-bold text-slate-800">{item.value}</span>
-               </div>
-             ))}
-          </div>
-        </div>
+        {/* WIP Status */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col"
+        >
+           <div className="mb-8">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Layers className="text-amber-500" />
+                积压库存 (WIP)
+              </h3>
+              <p className="text-sm text-slate-400 mt-1">各工序在制品数量监控</p>
+           </div>
+           <div className="flex-1 min-h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={wipChartData} layout="vertical" barSize={32}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 13, fontWeight: 500}} width={60} />
+                  <Tooltip cursor={{fill: 'transparent'}} content={<CustomTooltip />} />
+                  <Bar dataKey="wip" radius={[0, 4, 4, 0]}>
+                    {wipChartData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={['#818cf8', '#34d399', '#fbbf24', '#f87171'][index % 4]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+           </div>
+        </motion.div>
       </div>
+
+      {/* Bottom Section: Order Distribution */}
+      <motion.div 
+         initial={{ opacity: 0, y: 20 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ delay: 0.6 }}
+         className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 lg:col-span-1">
+              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <Database className="text-indigo-500" />
+                订单状态分布
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={orderStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {orderStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col justify-center items-center text-center space-y-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white opacity-50"></div>
+              <div className="relative z-10 p-6 max-w-lg">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp size={32} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 mb-2">系统运行状态良好</h3>
+                <p className="text-slate-500">所有生产节点数据同步正常，数据库连接稳定。无需额外维护。</p>
+              </div>
+          </div>
+      </motion.div>
     </div>
   );
 }
