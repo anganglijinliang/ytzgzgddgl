@@ -21,11 +21,13 @@ export default function Users() {
     name: string;
     role: UserRole;
     avatar: string;
+    password?: string;
   }>({
     username: '',
     name: '',
     role: 'order_entry',
-    avatar: ''
+    avatar: '',
+    password: ''
   });
 
   useEffect(() => {
@@ -54,7 +56,8 @@ export default function Users() {
         username: '',
         name: '',
         role: 'order_entry',
-        avatar: ''
+        avatar: '',
+        password: ''
       });
     } else {
       showToast('操作失败', 'error');
@@ -67,7 +70,8 @@ export default function Users() {
       username: user.username,
       name: user.name,
       role: user.role,
-      avatar: user.avatar || ''
+      avatar: user.avatar || '',
+      password: ''
     });
     setIsModalOpen(true);
   };
@@ -89,7 +93,8 @@ export default function Users() {
       username: '',
       name: '',
       role: 'order_entry',
-      avatar: ''
+      avatar: '',
+      password: ''
     });
     setIsModalOpen(true);
   };
@@ -303,6 +308,20 @@ export default function Users() {
                   disabled={!!editingUser} // Disable username edit for now as it's the ID/Link in some places, or simplify
                 />
                 {editingUser && <p className="text-xs text-gray-500 mt-1">用户名不可修改</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  密码 {editingUser ? <span className="text-gray-400 font-normal text-xs">(留空保持不变)</span> : <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="password"
+                  required={!editingUser}
+                  value={formData.password}
+                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={editingUser ? "请输入新密码" : "请输入密码"}
+                />
               </div>
 
               <div>

@@ -1,5 +1,7 @@
+import { Handler } from '@netlify/functions';
 import { pool } from './db';
 
+// Keep in sync with src/db/schema.sql
 const schema = `
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
@@ -8,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     role TEXT NOT NULL,
     avatar TEXT,
+    password_hash TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -52,6 +55,7 @@ CREATE TABLE IF NOT EXISTS sub_orders (
     pulling_quantity INTEGER DEFAULT 0, -- 拉管
     hydrostatic_quantity INTEGER DEFAULT 0, -- 水压
     lining_quantity INTEGER DEFAULT 0, -- 衬管
+    coating_quantity INTEGER DEFAULT 0, -- 外防
     status TEXT NOT NULL DEFAULT 'new'
 );
 
@@ -86,50 +90,6 @@ CREATE TABLE IF NOT EXISTS production_plans (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Migration for existing tables (Idempotent)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='heat_no') THEN
-        ALTER TABLE production_records ADD COLUMN heat_no TEXT;
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='process') THEN
-        ALTER TABLE production_records ADD COLUMN process TEXT DEFAULT 'packaging';
-    END IF;
-
-    -- SubOrders Migrations
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='pulling_quantity') THEN
-        ALTER TABLE sub_orders ADD COLUMN pulling_quantity INTEGER DEFAULT 0;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='hydrostatic_quantity') THEN
-        ALTER TABLE sub_orders ADD COLUMN hydrostatic_quantity INTEGER DEFAULT 0;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='lining_quantity') THEN
-        ALTER TABLE sub_orders ADD COLUMN lining_quantity INTEGER DEFAULT 0;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='coating_quantity') THEN
-        ALTER TABLE sub_orders ADD COLUMN coating_quantity INTEGER DEFAULT 0;
-    END IF;
-END $$;
-
--- Shipping Records Table (Removed)
-/*
-CREATE TABLE IF NOT EXISTS shipping_records (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES orders(id),
-    sub_order_id UUID REFERENCES sub_orders(id),
-    quantity INTEGER NOT NULL,
-    transport_type TEXT NOT NULL,
-    shipping_type TEXT NOT NULL,
-    shipping_warehouse TEXT,
-    vehicle_info TEXT,
-    shipping_no TEXT,
-    destination TEXT,
-    operator_id TEXT NOT NULL,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-*/
-
 -- Initial Data Seeding
 INSERT INTO users (username, name, role) 
 VALUES 
@@ -148,9 +108,37 @@ VALUES
     ('coatings', '["沥青漆", "环氧树脂", "锌层+沥青"]'::jsonb),
     ('warehouses', '["成品库A", "成品库B", "待发区"]'::jsonb)
 ON CONFLICT (key) DO NOTHING;
+
+-- Migrations
+DO $$
+BEGIN
+    -- Production Records Migration (Add process)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='process') THEN
+        ALTER TABLE production_records ADD COLUMN process TEXT DEFAULT 'packaging';
+    END IF;
+
+    -- Users Migration (Add password_hash)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN
+        ALTER TABLE users ADD COLUMN password_hash TEXT;
+    END IF;
+
+    -- SubOrders Migrations
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='pulling_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN pulling_quantity INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='hydrostatic_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN hydrostatic_quantity INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='lining_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN lining_quantity INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='sub_orders' AND column_name='coating_quantity') THEN
+        ALTER TABLE sub_orders ADD COLUMN coating_quantity INTEGER DEFAULT 0;
+    END IF;
+END $$;
 `;
 
-export const handler = async (event, context) => {
+export const handler: Handler = async (event, context) => {
   // Only allow POST requests to prevent accidental execution
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -166,13 +154,13 @@ export const handler = async (event, context) => {
         statusCode: 200,
         body: JSON.stringify({ message: 'Database initialized successfully' }),
       };
-    } catch (e) {
+    } catch (e: any) {
       await client.query('ROLLBACK');
       throw e;
     } finally {
       client.release();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error initializing database:', error);
     return {
       statusCode: 500,

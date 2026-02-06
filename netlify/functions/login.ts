@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { pool } from './db';
+import bcrypt from 'bcryptjs';
 
 export const handler: Handler = async (event, context) => {
   const { httpMethod, body } = event;
@@ -18,13 +19,6 @@ export const handler: Handler = async (event, context) => {
     const client = await pool.connect();
 
     try {
-      // In a real app, we should hash passwords. 
-      // For this step, we will check if the user exists and validate against a simple rule or stored hash.
-      // Since the current schema might not have a password column, we will:
-      // 1. Check if user exists by username
-      // 2. Perform a "mock" secure check (e.g., all users use '123456' or specific logic)
-      // TODO: Add 'password_hash' column to users table in next migration
-      
       const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
       
       if (result.rowCount === 0) {
@@ -32,17 +26,22 @@ export const handler: Handler = async (event, context) => {
       }
 
       const user = result.rows[0];
+      let validPassword = false;
 
-      // Temporary Password Validation Logic (until DB schema update)
-      // Allow '123456' for everyone or 'admin123' for admin
-      const validPassword = password === '123456' || (user.role === 'admin' && password === 'admin123');
+      if (user.password_hash) {
+          validPassword = await bcrypt.compare(password, user.password_hash);
+      } else {
+          // Fallback for users without hash (legacy/demo)
+          // Allow '123456' for everyone or 'admin123' for admin
+          validPassword = password === '123456' || (user.role === 'admin' && password === 'admin123');
+      }
 
       if (!validPassword) {
         return { statusCode: 401, body: JSON.stringify({ error: 'Invalid credentials' }) };
       }
 
       // Return user info without sensitive data
-      const { password: _, ...userWithoutPassword } = user;
+      const { password: _, password_hash: __, ...userWithoutPassword } = user;
       
       return {
         statusCode: 200,

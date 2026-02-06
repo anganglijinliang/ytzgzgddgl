@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     role TEXT NOT NULL,
     avatar TEXT,
+    password_hash TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -119,3 +120,17 @@ VALUES
     ('coatings', '["沥青漆", "环氧树脂", "锌层+沥青"]'::jsonb),
     ('warehouses', '["成品库A", "成品库B", "待发区"]'::jsonb)
 ON CONFLICT (key) DO NOTHING;
+
+-- Migrations
+DO $$
+BEGIN
+    -- Production Records Migration (Add process)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='process') THEN
+        ALTER TABLE production_records ADD COLUMN process TEXT DEFAULT 'packaging';
+    END IF;
+
+    -- Users Migration (Add password_hash)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN
+        ALTER TABLE users ADD COLUMN password_hash TEXT;
+    END IF;
+END $$;

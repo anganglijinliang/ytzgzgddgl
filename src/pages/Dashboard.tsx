@@ -16,7 +16,7 @@ import { FileText, Factory, Activity, Layers, Database, TrendingUp, CheckCircle2
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/context/ToastContext';
 import { useState } from 'react';
 
 export default function Dashboard() {
