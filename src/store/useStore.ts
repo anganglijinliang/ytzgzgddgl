@@ -87,14 +87,6 @@ const MOCK_USERS: User[] = [
     createdAt: new Date().toISOString()
   },
   {
-    id: 'mock-ship-id',
-    username: 'ship',
-    name: '发运主管',
-    role: 'operator',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ship',
-    createdAt: new Date().toISOString()
-  },
-  {
     id: 'mock-operator-id',
     username: 'operator',
     name: '操作员',

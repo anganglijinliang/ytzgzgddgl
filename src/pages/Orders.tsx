@@ -483,7 +483,7 @@ export default function Orders() {
                <QRCodeCanvas value={`${window.location.origin}/track/${showQRCode}`} size={200} />
             </div>
             <p className="text-sm text-gray-500 text-center max-w-xs">
-              客户扫描此二维码即可无需登录直接查询订单生产和发运进度
+              客户扫描此二维码即可无需登录直接查询订单生产进度
             </p>
             <button 
               onClick={() => setShowQRCode(null)}
