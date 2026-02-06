@@ -184,7 +184,7 @@ export default function TrackOrder() {
   const prodProgress = totalPlan > 0 ? Math.round((totalProd / totalPlan) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 pb-24 md:p-8">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
