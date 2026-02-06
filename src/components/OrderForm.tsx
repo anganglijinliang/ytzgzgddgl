@@ -11,7 +11,15 @@ interface OrderFormProps {
 }
 
 export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormProps) {
-  const { masterData, isLoading } = useStore();
+  const { masterData, orders, isLoading, removeMasterData } = useStore();
+  
+  // Combine master data with used values for smart suggestions
+  const usedWorkshops = React.useMemo(() => {
+    const s = new Set(masterData.workshops || ['一车间', '二车间', '三车间']);
+    orders.forEach(o => { if (o.workshop) s.add(o.workshop); });
+    return Array.from(s);
+  }, [masterData.workshops, orders]);
+
   const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: initialData || {
       orderNo: '',
@@ -31,44 +39,94 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
     name: "items"
   });
 
-  // Auto-complete helper with Mobile support
-  const DatalistInput = ({ name, options, placeholder, required = false, onChange }: any) => (
-    <div className="relative">
-      <input
-        list={`list-${name}`}
-        {...register(name, { 
-          required: required && "此项必填",
-          onChange: (e) => onChange && onChange(e.target.value)
-        })}
-        className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        placeholder={placeholder}
-      />
-      <datalist id={`list-${name}`}>
-        {options.map((opt: string) => (
-          <option key={opt} value={opt} />
-        ))}
-      </datalist>
-      
-      {/* Mobile-friendly Dropdown Trigger */}
-      <div className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer bg-gray-50 border-l border-gray-200 rounded-r-md hover:bg-gray-100">
-        <ChevronDown className="h-4 w-4 text-gray-500" />
-        <select
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={(e) => {
-            const val = e.target.value;
-            setValue(name, val, { shouldValidate: true, shouldDirty: true });
-            if (onChange) onChange(val);
-          }}
-          value="" // Always reset to allow selecting the same value or just to show placeholder? Actually value should be current value but we can't easily track it here without watch. Keep it empty to treat as a "picker".
-        >
-          <option value="" disabled>选择...</option>
-          {options.map((opt: string) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
+  // Smart Combobox with Delete support
+  const SmartCombobox = ({ name, options, placeholder, required = false, onChange, onDelete }: any) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [filter, setFilter] = React.useState('');
+    const wrapperRef = React.useRef<HTMLDivElement>(null);
+    
+    // Close when clicking outside
+    React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter((opt: string) => 
+      !filter || opt.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    return (
+      <div className="relative" ref={wrapperRef}>
+        <div className="relative">
+          <input
+            {...register(name, { 
+              required: required && "此项必填",
+              onChange: (e) => {
+                const val = e.target.value;
+                setFilter(val);
+                if (onChange) onChange(val);
+                setIsOpen(true);
+              }
+            })}
+            onFocus={() => setIsOpen(true)}
+            onClick={() => setIsOpen(true)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            placeholder={placeholder}
+            autoComplete="off"
+          />
+          <div 
+            className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer text-gray-400 hover:text-gray-600"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsOpen(!isOpen);
+            }}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </div>
+        </div>
+
+        {isOpen && (
+          <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+            {filteredOptions.length === 0 && filter && (
+              <li className="px-3 py-2 text-sm text-gray-500 cursor-default">将创建新选项: "{filter}"</li>
+            )}
+            {filteredOptions.map((opt: string) => (
+              <li 
+                key={opt} 
+                className="flex items-center justify-between px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer group"
+                onClick={() => {
+                  setValue(name, opt, { shouldValidate: true, shouldDirty: true });
+                  setFilter(''); // Reset filter after selection to show all options next time
+                  setIsOpen(false);
+                  if (onChange) onChange(opt);
+                }}
+              >
+                <span>{opt}</span>
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(opt);
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 opacity-60 hover:opacity-100 transition-opacity"
+                    title="从列表中删除"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   // Watch for weight calculations
   const handleSpecLevelChange = (index: number) => {
@@ -142,20 +200,22 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">产线</label>
-                <select
-                  {...register("workshop")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">请选择</option>
-                  <option value="一车间">一车间</option>
-                  <option value="二车间">二车间</option>
-                  <option value="三车间">三车间</option>
-                </select>
+                <SmartCombobox 
+                  name="workshop" 
+                  options={usedWorkshops} 
+                  placeholder="选择或输入产线"
+                  onDelete={(val: string) => removeMasterData('workshops', val)}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">仓库</label>
-                <DatalistInput name="warehouse" options={masterData.warehouses} placeholder="选择或输入仓库" />
+                <SmartCombobox 
+                  name="warehouse" 
+                  options={masterData.warehouses} 
+                  placeholder="选择或输入仓库" 
+                  onDelete={(val: string) => removeMasterData('warehouses', val)}
+                />
               </div>
             </div>
              

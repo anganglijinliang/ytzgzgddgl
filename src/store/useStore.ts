@@ -37,6 +37,7 @@ interface AppState {
 
   // Helper to update master data automatically
   updateMasterData: (key: keyof MasterData, value: string) => void;
+  removeMasterData: (key: keyof MasterData, value: string) => void;
   
   // Data Sync (Legacy / Demo Backup)
   importData: (data: Partial<AppState>) => void;
@@ -57,6 +58,7 @@ const INITIAL_MASTER_DATA: MasterData = {
   lengths: ['6米', '5.7米', '8米'],
   coatings: ['沥青漆', '环氧树脂', '锌层+沥青'],
   warehouses: ['成品库A', '成品库B', '待发区'],
+  workshops: ['一车间', '二车间', '三车间', '四车间'],
 };
 
 const MOCK_USERS: User[] = [
@@ -380,34 +382,46 @@ export const useStore = create<AppState>()(
       },
 
       updateMasterData: (key, value) => {
+        if (!value) return;
         set(state => {
-          if (!value || state.masterData[key].includes(value)) return {};
-          return {
-            masterData: {
-              ...state.masterData,
-              [key]: [...state.masterData[key], value]
-            }
-          };
+          const list = state.masterData[key] || [];
+          if (!list.includes(value)) {
+            return {
+              masterData: {
+                ...state.masterData,
+                [key]: [...list, value]
+              }
+            };
+          }
+          return state;
         });
+      },
+
+      removeMasterData: (key, value) => {
+        set(state => ({
+          masterData: {
+            ...state.masterData,
+            [key]: (state.masterData[key] || []).filter(item => item !== value)
+          }
+        }));
       },
 
       importData: (data) => {
         set((state) => ({
           ...state,
           ...data,
-          currentUser: state.currentUser, 
+          // Merge master data if needed, or just replace
+          masterData: { ...state.masterData, ...data.masterData }
         }));
       }
     }),
     {
-      name: 'angang-order-storage',
-      version: 3, // Bump version to 3 for specs update (DN80-2600)
-      partialize: (state) => ({
+      name: 'angang-storage',
+      version: 1, // Increment this if schema changes
+      partialize: (state) => ({ 
         currentUser: state.currentUser,
-        // We still persist masterData locally for faster load, but orders/records should come from DB
-        masterData: state.masterData, 
-        plans: state.plans,
-      }),
+        masterData: state.masterData 
+      }), // Only persist user session and local master data preferences
     }
   )
 );

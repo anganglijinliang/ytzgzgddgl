@@ -18,6 +18,7 @@ export interface MasterData {
   lengths: string[]; // 长度
   coatings: string[]; // 防腐措施
   warehouses: string[]; // 仓库
+  workshops: string[]; // 产线/车间
 }
 
 export type ProductionProcess = 'pulling' | 'hydrostatic' | 'lining' | 'packaging';

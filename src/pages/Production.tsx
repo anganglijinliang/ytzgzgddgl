@@ -2,8 +2,42 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order, ProductionPlan } from '@/types';
 import { Factory, Save, Search, CheckCircle2, ShieldCheck, Monitor, LayoutGrid, ListTodo } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Production Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center bg-red-50 text-red-600 rounded-xl m-4">
+          <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">页面出错了</h2>
+          <p className="text-sm opacity-80 mb-4">{this.state.error?.message}</p>
+          <button 
+            onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            刷新页面
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { useToast } from '@/context/ToastContext';
 
 export default function Production() {
@@ -15,8 +49,17 @@ export default function Production() {
   const plans = Array.isArray(rawPlans) ? rawPlans : [];
   const { showToast } = useToast();
   
-  // UI State
-  const [isWorkshopMode, setIsWorkshopMode] = React.useState(false);
+  // UI State - Default to Workshop Mode if previously used or for operators
+  const [isWorkshopMode, setIsWorkshopMode] = React.useState(() => {
+    // If user is strictly production/operator, default to true unless explicitly exited?
+    // Let's rely on persistence.
+    return localStorage.getItem('view_mode_production') === 'workshop';
+  });
+  
+  React.useEffect(() => {
+    localStorage.setItem('view_mode_production', isWorkshopMode ? 'workshop' : 'desktop');
+  }, [isWorkshopMode]);
+
   const [activeTab, setActiveTab] = React.useState<'tasks' | 'all'>('tasks');
   
   // Selection State
@@ -281,6 +324,7 @@ export default function Production() {
     };
 
     return (
+      <ErrorBoundary>
       <div className="h-[calc(100vh-100px)] flex flex-col bg-gray-50 -m-4 p-4">
         <SuccessOverlay show={showSuccess} message={`录入成功 +${quantity}`} />
         
@@ -398,7 +442,7 @@ export default function Production() {
                      {/* Progress Background */}
                      <div 
                         className="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-500" 
-                        style={{ width: `${Math.min((item.producedQuantity / item.plannedQuantity) * 100, 100)}%` }} 
+                        style={{ width: `${Math.min((item.producedQuantity / (item.plannedQuantity || 1)) * 100, 100)}%` }} 
                      />
                    </button>
                  ))}
@@ -440,14 +484,25 @@ export default function Production() {
              <button
                onClick={handleWorkshopSubmit}
                disabled={!selectedSubOrder || quantity <= 0 || isLoading}
-               className="w-full py-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-2xl font-bold rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
+               className={`w-full py-4 text-2xl font-bold rounded-xl shadow-lg transition-all ${
+                 !selectedSubOrder || quantity <= 0 || isLoading
+                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                   : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 active:scale-95'
+               }`}
              >
-               {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Save className="h-8 w-8" />}
-               确认提交
+               {isLoading ? (
+                 <span className="flex items-center justify-center gap-2">
+                   <Loader2 className="h-8 w-8 animate-spin" />
+                   提交中...
+                 </span>
+               ) : (
+                 '确认提交'
+               )}
              </button>
           </div>
         </div>
       </div>
+      </ErrorBoundary>
     );
   }
 
@@ -686,5 +741,6 @@ export default function Production() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

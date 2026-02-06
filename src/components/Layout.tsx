@@ -10,7 +10,8 @@ import {
   X,
   UserCircle,
   BarChart3,
-  Users
+  Users,
+  WifiOff
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -19,6 +20,17 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+
+  React.useEffect(() => {
+    const handleStatusChange = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleStatusChange);
+    window.addEventListener('offline', handleStatusChange);
+    return () => {
+      window.removeEventListener('online', handleStatusChange);
+      window.removeEventListener('offline', handleStatusChange);
+    };
+  }, []);
 
   if (!currentUser) {
     React.useEffect(() => {
@@ -46,6 +58,12 @@ export default function Layout() {
             <Factory className="h-6 w-6" />
             安钢永通订单
           </h1>
+          {!isOnline && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+              <WifiOff className="h-3 w-3" />
+              离线模式
+            </div>
+          )}
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {filteredNavItems.map(item => (
@@ -84,10 +102,17 @@ export default function Layout() {
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center justify-between px-4">
-        <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
-          <Factory className="h-5 w-5" />
-          安钢永通
-        </h1>
+        <div className="flex flex-col">
+          <h1 className="text-lg font-bold text-blue-700 flex items-center gap-2">
+            <Factory className="h-5 w-5" />
+            安钢永通
+          </h1>
+          {!isOnline && (
+            <span className="text-[10px] text-red-600 flex items-center gap-1">
+              <WifiOff className="h-3 w-3" /> 离线
+            </span>
+          )}
+        </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
