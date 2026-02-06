@@ -12,13 +12,33 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
-import { FileText, Factory, Activity, Layers, Database, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { FileText, Factory, Activity, Layers, Database, TrendingUp, CheckCircle2, RefreshCw } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import { useToast } from '@/components/ui/Toast';
+import { useState } from 'react';
 
 export default function Dashboard() {
   const { orders, productionRecords, isLoading } = useStore();
+  const { showToast } = useToast();
+  const [isInitDbLoading, setIsInitDbLoading] = useState(false);
+
+  const handleInitDb = async () => {
+    if (!confirm('确定要初始化数据库吗？这将创建所需的表结构（如果不存在）。')) return;
+    
+    setIsInitDbLoading(true);
+    try {
+      const res = await fetch('/api/init-db', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to initialize DB');
+      showToast('数据库初始化成功', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('数据库初始化失败', 'error');
+    } finally {
+      setIsInitDbLoading(false);
+    }
+  };
 
   if (isLoading && orders.length === 0) {
     return <LoadingSpinner />;
@@ -279,7 +299,15 @@ export default function Dashboard() {
                   <TrendingUp size={32} />
                 </div>
                 <h3 className="text-2xl font-black text-slate-800 mb-2">系统运行状态良好</h3>
-                <p className="text-slate-500">所有生产节点数据同步正常，数据库连接稳定。无需额外维护。</p>
+                <p className="text-slate-500 mb-4">所有生产节点数据同步正常，数据库连接稳定。无需额外维护。</p>
+                <button 
+                  onClick={handleInitDb}
+                  disabled={isInitDbLoading}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw size={18} className={clsx(isInitDbLoading && "animate-spin")} />
+                  {isInitDbLoading ? '正在初始化...' : '初始化数据库'}
+                </button>
               </div>
           </div>
       </motion.div>

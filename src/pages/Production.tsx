@@ -31,7 +31,7 @@ const WorkshopView = ({
   };
 
   const TEAMS = ['甲班', '乙班', '丙班', '丁班'];
-  const SHIFTS = ['白班', '夜班'];
+  const SHIFTS = ['白班', '中班', '夜班'];
 
   // State
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -408,7 +408,7 @@ const WorkshopView = ({
                    {/* Shift Setting */}
                     <div>
                        <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">班次</label>
-                       <div className="grid grid-cols-2 gap-3">
+                       <div className="grid grid-cols-3 gap-3">
                            {SHIFTS.map(s => (
                                <button 
                                    key={s} 
