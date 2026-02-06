@@ -127,7 +127,7 @@ const WorkshopView = ({
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] supports-[height:100dvh]:h-[calc(100dvh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans">
+    <div className="h-[calc(100dvh-11rem)] md:h-[calc(100vh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans">
       {/* Top Bar - Industrial Style */}
       <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md z-20 shrink-0">
         <div className="flex items-center gap-6">
