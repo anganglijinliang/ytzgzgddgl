@@ -6,8 +6,6 @@ import {
   FileInput, 
   Factory, 
   LogOut, 
-  Menu,
-  X,
   BarChart3,
   Users,
   WifiOff
@@ -130,60 +128,74 @@ export default function Layout() {
             </span>
           )}
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1">
+           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+              {currentUser.name.charAt(0)}
+           </div>
         </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-gray-800/50" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-xl p-4 pt-20" onClick={e => e.stopPropagation()}>
-             <nav className="space-y-1">
-              {filteredNavItems.map(item => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={clsx(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                    location.pathname === item.path
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-700 hover:bg-gray-100"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex justify-around items-center h-16 px-2">
+          {filteredNavItems.slice(0, 5).map(item => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={clsx(
+                  "flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors active:scale-95",
+                  isActive ? "text-blue-600" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                <item.icon className={clsx("h-6 w-6", isActive && "fill-blue-100")} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
 
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <div className="flex items-center gap-3 px-4 mb-4">
-                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+      {/* Mobile Menu Overlay (Profile & Logout) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+          <motion.div 
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 pb-8" 
+            onClick={e => e.stopPropagation()}
+          >
+             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+             
+             <div className="flex items-center gap-4 mb-8">
+                 <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                     {currentUser.name.charAt(0)}
                  </div>
                  <div>
-                    <p className="text-sm font-bold text-gray-900">{currentUser.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <h3 className="text-xl font-bold text-slate-900">{currentUser.name}</h3>
+                    <p className="text-slate-500 font-medium">
                       {currentUser.role === 'admin' ? '系统管理员' : currentUser.role === 'order_entry' ? '订单录入员' : '生产主管'}
                     </p>
                  </div>
-              </div>
-              <button
-                onClick={() => { logout(); navigate('/login'); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                退出登录
-              </button>
-            </div>
-          </div>
+             </div>
+
+             <div className="space-y-2">
+                <button
+                  onClick={() => { logout(); navigate('/login'); }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-4 text-base font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-2xl transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  退出登录
+                </button>
+             </div>
+          </motion.div>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto md:p-8 p-4 pt-20 md:pt-8">
+      <main className="flex-1 overflow-auto md:p-8 p-4 pt-20 pb-24 md:pt-8 md:pb-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

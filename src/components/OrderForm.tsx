@@ -166,13 +166,13 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto transition-all duration-300">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-6 overflow-y-auto transition-all duration-300">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col h-full sm:h-auto sm:max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-6 py-4 sm:px-8 sm:py-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-2xl sticky top-0 z-10">
+        <div className="px-4 py-3 sm:px-8 sm:py-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-none sm:rounded-t-2xl sticky top-0 z-10 safe-area-top">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+            <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
               {initialData ? (
                 <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                    <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -198,7 +198,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
 
         {/* Form Content */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50">
-          <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
+          <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-20 sm:pb-0">
             
             {/* Section: Basic Info */}
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -279,7 +279,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
             </div>
 
             {/* Section: Sub Orders (Items) */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   <span className="w-1 h-6 bg-green-500 rounded-full"></span>
@@ -289,9 +289,9 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                 <button
                   type="button"
                   onClick={() => append({ spec: '', level: '', interfaceType: '', lining: '', length: '', coating: '', plannedQuantity: 0 } as any)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-xl text-sm font-medium transition-all active:scale-95 border border-green-200"
+                  className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-95 border border-green-200"
                 >
-                  <Plus className="h-4 w-4" /> 添加明细
+                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">添加明细</span><span className="sm:hidden">添加</span>
                 </button>
               </div>
 
@@ -312,11 +312,11 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                 )}
 
                 {fields.map((field, index) => (
-                  <div key={field.id} className="relative bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 group p-4 lg:p-0">
-                    <div className="lg:grid lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1.2fr_1fr_1fr_40px] gap-3 items-start lg:items-center lg:px-4 lg:py-3 space-y-4 lg:space-y-0">
+                  <div key={field.id} className="relative bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 group p-3 sm:p-4 lg:p-0">
+                    <div className="lg:grid lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1.2fr_1fr_1fr_40px] gap-3 items-start lg:items-center lg:px-4 lg:py-3 space-y-3 lg:space-y-0">
                       
                       {/* Mobile Labels are handled via grid/flex layout in mobile view */}
-                      <div className="grid grid-cols-2 gap-4 lg:contents">
+                      <div className="grid grid-cols-2 gap-3 lg:contents">
                         <div className="lg:contents">
                             <label className="lg:hidden text-xs text-slate-500 mb-1 block">规格</label>
                             <SmartCombobox 
@@ -338,7 +338,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 lg:contents">
+                      <div className="grid grid-cols-2 gap-3 lg:contents">
                         <div className="lg:contents">
                             <label className="lg:hidden text-xs text-slate-500 mb-1 block">接口</label>
                             <SmartCombobox name={`items.${index}.interfaceType`} options={masterData.interfaces} placeholder="接口" />
@@ -349,7 +349,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 lg:contents">
+                      <div className="grid grid-cols-2 gap-3 lg:contents">
                          <div className="lg:contents">
                             <label className="lg:hidden text-xs text-slate-500 mb-1 block">长度</label>
                             <SmartCombobox name={`items.${index}.length`} options={masterData.lengths} placeholder="长度" />
@@ -374,7 +374,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 lg:contents">
+                      <div className="grid grid-cols-2 gap-3 lg:contents">
                          <div className="lg:contents">
                             <label className="lg:hidden text-xs text-slate-500 mb-1 block">单重</label>
                             <input

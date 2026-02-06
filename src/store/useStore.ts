@@ -324,6 +324,40 @@ export const useStore = create<AppState>()(
 
         } catch (error) {
            console.error('Add Order Error:', error);
+           
+           // Attempt to verify if the order was actually created (e.g. in case of timeout)
+           try {
+             // Wait a short moment to allow DB consistency/replication if needed
+             await new Promise(resolve => setTimeout(resolve, 1000));
+
+             const verifyRes = await fetch('/.netlify/functions/orders');
+             if (verifyRes.ok) {
+               const serverOrders = await verifyRes.json();
+               const found = serverOrders.find((o: Order) => o.orderNo === orderData.orderNo);
+               
+               if (found) {
+                 // Recovered: Order exists in DB
+                 set({ orders: serverOrders, isLoading: false });
+                 
+                 // Also update master data since it succeeded
+                 const { updateMasterData } = get();
+                 orderData.items.forEach(item => {
+                    updateMasterData('specs', item.spec);
+                    updateMasterData('levels', item.level);
+                    updateMasterData('interfaces', item.interfaceType);
+                    updateMasterData('linings', item.lining);
+                    updateMasterData('lengths', item.length);
+                    updateMasterData('coatings', item.coating);
+                 });
+                 if (orderData.warehouse) updateMasterData('warehouses', orderData.warehouse);
+                 
+                 return true;
+               }
+             }
+           } catch (verifyError) {
+             console.warn('Order verification failed:', verifyError);
+           }
+
            // Rollback optimistic update
            set(state => ({ 
              orders: state.orders.filter(o => o.id !== tempId),

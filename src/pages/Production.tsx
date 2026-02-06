@@ -283,6 +283,7 @@ const WorkshopView = ({
             </div>
         </div>
       </div>
+      </div>
 
       {/* Settings Modal (Simplified) */}
       {showSettings && (

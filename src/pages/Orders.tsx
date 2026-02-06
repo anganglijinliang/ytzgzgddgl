@@ -14,7 +14,6 @@ import {
   Printer,
   Upload,
   Loader2,
-  FileText,
   Calendar,
   User,
   Package
@@ -501,8 +500,8 @@ export default function Orders() {
                                         </div>
                                       </div>
                                       <div className={`text-xs px-2 py-1 rounded-md font-medium
-                                        ${item.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                                        {item.status === 'completed' ? '完成' : '生产中'}
+                                        ${item.status === 'production_completed' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                        {item.status === 'production_completed' ? '完成' : '生产中'}
                                       </div>
                                     </div>
                                   </div>
@@ -597,8 +596,8 @@ export default function Orders() {
                           <div key={idx} className="bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
                              <div className="flex justify-between mb-1">
                                 <span className="font-bold text-slate-700">{item.spec} <span className="font-normal text-slate-500 text-xs">/ {item.level}</span></span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${item.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}`}>
-                                  {item.status === 'completed' ? '完成' : '生产中'}
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${item.status === 'production_completed' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}`}>
+                                  {item.status === 'production_completed' ? '完成' : '生产中'}
                                 </span>
                              </div>
                              <div className="text-xs text-slate-500 mb-2">
