@@ -1,3 +1,4 @@
+import React from 'react';
 import { useStore } from '@/store/useStore';
 import { 
   Tooltip, 
@@ -12,11 +13,33 @@ import {
   YAxis,
   CartesianGrid
 } from 'recharts';
-import { FileText, Factory, AlertCircle, Activity, Layers } from 'lucide-react';
+import { FileText, Factory, AlertCircle, Activity, Layers, Database, Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/context/ToastContext';
 
 export default function Dashboard() {
-  const { orders, productionRecords, isLoading } = useStore();
+  const { orders, productionRecords, isLoading, currentUser } = useStore();
+  const { showToast } = useToast();
+  const [isInitializing, setIsInitializing] = React.useState(false);
+
+  const handleInitDB = async () => {
+    if (!confirm('确定要初始化数据库吗？这将创建必要的表结构（如果不存在）。')) return;
+    
+    setIsInitializing(true);
+    try {
+      const res = await fetch('/.netlify/functions/init-db', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('数据库初始化成功', 'success');
+      } else {
+        showToast(`初始化失败: ${data.error}`, 'error');
+      }
+    } catch (error) {
+      showToast('初始化请求失败', 'error');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   if (isLoading && orders.length === 0) {
     return <LoadingSpinner />;
@@ -54,12 +77,6 @@ export default function Dashboard() {
   ].filter(d => d.value > 0);
 
   // WIP Data (Process Balance)
-  // Aggregating data from sub-orders to see how many pipes are at each stage
-  // Note: This is an estimation based on cumulative counters. 
-  // Ideally: Pulling > Hydro > Lining > Packaging
-  // Stock at Pulling = PullingQty - HydroQty
-  // Stock at Hydro = HydroQty - LiningQty
-  // Stock at Lining = LiningQty - PackagingQty
   const processData = orders.reduce((acc, order) => {
     order.items.forEach(item => {
       acc.pulling += (item.pullingQuantity || 0);
@@ -86,6 +103,21 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold text-gray-800">数字工厂概览</h2>
           <p className="text-gray-500 mt-1">实时监控生产瓶颈与质量追溯</p>
         </div>
+        
+        {currentUser?.role === 'admin' && (
+          <button
+            onClick={handleInitDB}
+            disabled={isInitializing}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+          >
+            {isInitializing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Database className="h-4 w-4" />
+            )}
+            {isInitializing ? '正在初始化...' : '初始化数据库'}
+          </button>
+        )}
       </div>
 
       {/* Stats Grid */}
