@@ -17,7 +17,7 @@ import clsx from 'clsx';
 
 // 1. Workshop Mode (Touch Friendly) - Preserved & Polished
 const WorkshopView = ({ 
-  currentUser, orders, plans, addProductionRecord, updatePlan 
+  currentUser, orders, plans, addProductionRecord, updatePlan, masterData 
 }: any) => {
   const { showToast } = useToast();
   
@@ -41,7 +41,7 @@ const WorkshopView = ({
   const [quantity, setQuantity] = useState<number>(0);
   const [team, setTeam] = useState<string>(localStorage.getItem('prod_team') || '甲班');
   const [shift, setShift] = useState<string>(localStorage.getItem('prod_shift') || '白班');
-  const [workshop] = useState<string>(localStorage.getItem('prod_workshop') || '一车间');
+  const [workshop, setWorkshop] = useState<string>(localStorage.getItem('prod_workshop') || '一车间');
   const [recordDate, setRecordDate] = useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
   const [heatNo] = useState<string>('');
   const [process, setProcess] = useState<string>(localStorage.getItem('prod_process') || 'pulling');
@@ -127,7 +127,7 @@ const WorkshopView = ({
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans">
+    <div className="h-[calc(100vh-64px)] supports-[height:100dvh]:h-[calc(100dvh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans">
       {/* Top Bar - Industrial Style */}
       <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md z-20 shrink-0">
         <div className="flex items-center gap-6">
@@ -381,6 +381,27 @@ const WorkshopView = ({
                                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-colors"
                            />
                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                       </div>
+                   </div>
+
+                   {/* Workshop Setting */}
+                   <div>
+                       <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">所属车间</label>
+                       <div className="grid grid-cols-2 gap-3">
+                           {(masterData?.workshops || ['一车间', '二车间', '三车间']).map((ws: string) => (
+                               <button 
+                                   key={ws} 
+                                   onClick={() => setWorkshop(ws)} 
+                                   className={clsx(
+                                       "py-3 rounded-xl border-2 font-bold transition-all", 
+                                       workshop === ws 
+                                        ? "bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200" 
+                                        : "bg-white text-slate-600 border-slate-200 hover:border-purple-300"
+                                   )}
+                               >
+                                   {ws}
+                               </button>
+                           ))}
                        </div>
                    </div>
 
@@ -892,7 +913,7 @@ export default function Production() {
         <div className="bg-slate-50 min-h-screen">
             {/* View Switcher for Admins */}
             {(currentUser?.role === 'admin' || currentUser?.role === 'production') && (
-                <div className="fixed bottom-6 right-6 z-50 flex bg-white rounded-full shadow-2xl p-1 border border-slate-200">
+                <div className="fixed bottom-32 md:bottom-6 right-6 z-50 flex bg-white rounded-full shadow-2xl p-1 border border-slate-200">
                     <button 
                         onClick={() => setViewMode('dispatcher')}
                         className={clsx(

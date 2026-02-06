@@ -48,7 +48,7 @@ export default function Layout() {
   const filteredNavItems = navItems.filter(item => item.roles.includes(currentUser.role));
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+    <div className="min-h-screen supports-[min-height:100dvh]:min-h-[100dvh] bg-gray-50 flex font-sans text-gray-900">
       {/* Sidebar Desktop - Modern Dark Theme */}
       <aside className="hidden md:flex flex-col w-72 bg-slate-900 text-white shadow-xl z-20 transition-all duration-300">
         <div className="p-6 border-b border-slate-800 flex items-center gap-3">
@@ -136,7 +136,7 @@ export default function Layout() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-[env(safe-area-inset-bottom)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[9999] pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-16 px-2">
           {filteredNavItems.slice(0, 5).map(item => {
             const isActive = location.pathname === item.path;
