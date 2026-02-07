@@ -456,14 +456,14 @@ const WorkshopView = ({
 
       {/* Settings Modal (Enhanced) */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-               <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+               <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
                    <h3 className="text-xl font-bold text-slate-800">终端设置</h3>
                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X className="text-slate-500" /></button>
                </div>
                
-               <div className="p-8 space-y-8">
+               <div className="p-8 space-y-8 overflow-y-auto flex-1">
                    {/* Date Setting */}
                    <div>
                        <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">生产日期</label>
@@ -563,7 +563,7 @@ const WorkshopView = ({
                    </div>
                </div>
                
-               <div className="p-6 border-t border-slate-100 bg-slate-50">
+               <div className="p-6 border-t border-slate-100 bg-slate-50 flex-shrink-0">
                    <button onClick={() => setShowSettings(false)} className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-200 transition-all active:scale-95">
                        保存设置
                    </button>
