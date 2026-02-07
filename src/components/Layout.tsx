@@ -195,7 +195,7 @@ export default function Layout() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto md:p-8 p-4 pt-20 pb-24 md:pt-8 md:pb-8">
+      <main className="flex-1 overflow-auto md:p-8 p-4 pt-20 pb-32 md:pt-8 md:pb-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

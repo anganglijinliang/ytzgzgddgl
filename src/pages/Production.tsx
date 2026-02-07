@@ -127,7 +127,7 @@ const WorkshopView = ({
   };
 
   return (
-    <div className="h-[calc(100dvh-11rem)] md:h-[calc(100vh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans">
+    <div className="h-full md:h-[calc(100vh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans relative">
       {/* Top Bar - Industrial Style */}
       <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md z-20 shrink-0">
         <div className="flex items-center gap-6">
@@ -259,7 +259,7 @@ const WorkshopView = ({
                 <span className="font-bold text-slate-800">返回任务列表</span>
             </div>
 
-            <div className="flex-1 p-4 md:p-8 flex flex-col overflow-y-auto max-w-5xl mx-auto w-full">
+            <div className="flex-1 p-4 md:p-8 pb-32 md:pb-8 flex flex-col overflow-y-auto max-w-5xl mx-auto w-full">
             {/* Info Card - Industrial Design */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex-shrink-0">
                 {selectedOrder && selectedSubOrder ? (
@@ -310,7 +310,7 @@ const WorkshopView = ({
             </div>
 
             {/* Numpad Area */}
-            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 min-h-[450px] md:min-h-[400px]">
+            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 min-h-[350px] md:min-h-[400px]">
                 <div className="flex-1 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6 order-1 md:order-1">
                      {/* Modern NumPad */}
                      <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
@@ -343,7 +343,7 @@ const WorkshopView = ({
                         </button>
                     </div>
                 </div>
-                <div className="w-full md:w-48 h-24 md:h-auto flex-shrink-0 flex flex-col order-2 md:order-2">
+                <div className="hidden md:flex w-full md:w-48 h-24 md:h-auto flex-shrink-0 flex-col order-2 md:order-2">
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}
@@ -477,6 +477,20 @@ const WorkshopView = ({
            </div>
         </div>
       )}
+
+      {/* Mobile Fixed Submit Button */}
+       {selectedPlanId && (
+       <div className="md:hidden fixed bottom-[80px] left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-slate-200 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+           <button 
+               onClick={handleSubmit}
+               disabled={!selectedOrder || quantity <= 0}
+               className="w-full h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl font-bold rounded-full shadow-lg shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-transform"
+           >
+               <CheckCircle2 size={24} />
+               <span>确认提交 ({quantity})</span>
+           </button>
+       </div>
+       )}
 
       {/* Success Overlay */}
       <AnimatePresence>
@@ -776,7 +790,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                         </div>
 
                                         <div className="grid grid-cols-6 gap-4 mb-6">
-                                            <div className="col-span-2">
+                                            <div className="col-span-6 md:col-span-2">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">工序</label>
                                                 <select 
                                                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
@@ -790,7 +804,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                                     <option value="packaging">打包入库</option>
                                                 </select>
                                             </div>
-                                            <div className="col-span-2">
+                                            <div className="col-span-6 md:col-span-2">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">执行车间</label>
                                                 <select 
                                                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
@@ -802,7 +816,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                                     ))}
                                                 </select>
                                             </div>
-                                            <div className="col-span-2">
+                                            <div className="col-span-6 md:col-span-2">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">计划数量</label>
                                                 <input 
                                                     type="number"
@@ -811,7 +825,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                                     onChange={e => setPlanForm({...planForm, quantity: Number(e.target.value)})}
                                                 />
                                             </div>
-                                            <div className="col-span-2">
+                                            <div className="col-span-6 md:col-span-2">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">指定班组</label>
                                                 <select 
                                                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
@@ -824,7 +838,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                                     <option value="丁班">丁班</option>
                                                 </select>
                                             </div>
-                                            <div className="col-span-2">
+                                            <div className="col-span-6 md:col-span-2">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">指定班次</label>
                                                 <select 
                                                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
@@ -836,7 +850,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                                     <option value="夜班">夜班</option>
                                                 </select>
                                             </div>
-                                             <div className="col-span-2">
+                                             <div className="col-span-6 md:col-span-2">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">计划日期</label>
                                                 <input 
                                                     type="date"

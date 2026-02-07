@@ -219,6 +219,7 @@ export default function Dashboard() {
                 <Bar name="拉管" dataKey="pulling" stackId="a" fill="#818cf8" radius={[0, 0, 0, 0]} />
                 <Bar name="水压" dataKey="hydrostatic" stackId="a" fill="#34d399" radius={[0, 0, 0, 0]} />
                 <Bar name="衬管" dataKey="lining" stackId="a" fill="#fbbf24" radius={[0, 0, 0, 0]} />
+                <Bar name="外防" dataKey="coating" stackId="a" fill="#a78bfa" radius={[0, 0, 0, 0]} />
                 <Bar name="打包" dataKey="packaging" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

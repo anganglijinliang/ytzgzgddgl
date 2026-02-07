@@ -555,18 +555,18 @@ export default function Orders() {
                         <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {order.deliveryDate || '未指定'}</span>
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-3">
                        {canEdit && (
                           <button 
                             onClick={() => handleEdit(order)}
-                            className="p-2 text-blue-600 bg-blue-50 rounded-lg"
+                            className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 active:scale-95 transition-all"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                        )}
                        <button 
                           onClick={() => toggleExpand(order.id)}
-                          className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-slate-100 text-slate-600' : 'bg-slate-50 text-slate-400'}`}
+                          className={`p-2 rounded-lg transition-all active:scale-95 ${isExpanded ? 'bg-slate-100 text-slate-600' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                         >
                           {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                         </button>
@@ -610,20 +610,20 @@ export default function Orders() {
                           </div>
                        ))}
                        
-                       <div className="flex justify-end gap-2 pt-2">
+                       <div className="flex justify-end gap-4 pt-4">
                           {canEdit && (
                             <button 
                               onClick={() => handleDelete(order.id)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg"
+                              className="flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 bg-red-50 rounded-xl hover:bg-red-100 active:scale-95 transition-all"
                             >
-                              <Trash2 className="h-3 w-3" /> 删除订单
+                              <Trash2 className="h-4 w-4" /> 删除订单
                             </button>
                           )}
                            <button 
                               onClick={() => setShowQRCode(order.orderNo)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-xs text-slate-600 bg-slate-100 rounded-lg"
+                              className="flex items-center gap-1.5 px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 active:scale-95 transition-all"
                             >
-                              <QrCode className="h-3 w-3" /> 二维码
+                              <QrCode className="h-4 w-4" /> 二维码
                             </button>
                        </div>
                     </div>
