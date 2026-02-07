@@ -57,8 +57,24 @@ export default function Dashboard() {
     return <LoadingSpinner fullScreen />;
   }
 
+  // Helper to check equipment status based on recent activity
+  const getEquipmentStatus = (processName: string) => {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const hasRecentActivity = productionRecords.some(r => 
+      r.process === processName && new Date(r.timestamp) > thirtyMinutesAgo
+    );
+    return hasRecentActivity ? '运行中' : '待机中';
+  };
+
+  const getEquipmentColor = (status: string) => status === '运行中' ? 'text-emerald-400' : 'text-slate-500';
+
   // Kanban View Component
   if (isKanbanMode) {
+    const sortedRecords = [...productionRecords].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const totalOrders = orders.length || 1;
+    const pendingOrders = orders.filter(o => o.status === 'new').length;
+    const pendingPercent = Math.round((pendingOrders / totalOrders) * 100);
+
     return (
       <div className="fixed inset-0 z-[99999] bg-slate-950 text-white overflow-hidden flex flex-col">
         {/* Header */}
@@ -95,7 +111,13 @@ export default function Dashboard() {
               <h3 className="text-slate-400 text-lg uppercase tracking-widest">今日产量</h3>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-7xl font-bold text-blue-400 font-mono">
-                  {productionRecords.filter(r => r.timestamp.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0)}
+                  {productionRecords.filter(r => {
+                    const recordDate = new Date(r.timestamp);
+                    const today = new Date();
+                    return recordDate.getDate() === today.getDate() && 
+                           recordDate.getMonth() === today.getMonth() && 
+                           recordDate.getFullYear() === today.getFullYear();
+                  }).reduce((acc, cur) => acc + cur.quantity, 0)}
                 </span>
                 <span className="text-xl text-slate-500">支</span>
               </div>
@@ -130,7 +152,7 @@ export default function Dashboard() {
             </h3>
             <div className="flex-1 overflow-hidden relative">
               <div className="absolute inset-0 overflow-y-auto space-y-4 no-scrollbar">
-                {productionRecords.slice(0, 10).map((record, idx) => (
+                {sortedRecords.slice(0, 10).map((record, idx) => (
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -165,10 +187,10 @@ export default function Dashboard() {
           <div className="col-span-1 bg-slate-900/50 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
              <h3 className="text-slate-400 text-lg uppercase tracking-widest">待排产</h3>
              <div className="text-5xl font-bold text-amber-400 font-mono mt-2">
-                {orders.filter(o => o.status === 'new').length}
+                {pendingOrders}
              </div>
              <div className="mt-4 h-2 bg-slate-800 rounded-full overflow-hidden">
-               <div className="h-full bg-amber-400 w-3/4" />
+               <div className="h-full bg-amber-400 transition-all duration-1000" style={{ width: `${pendingPercent}%` }} />
              </div>
           </div>
 
@@ -176,20 +198,20 @@ export default function Dashboard() {
              <h3 className="text-slate-400 text-lg uppercase tracking-widest">设备状态</h3>
              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="bg-slate-800 rounded-lg p-3 text-center">
-                  <div className="text-emerald-400 font-bold">退火炉</div>
-                  <div className="text-xs text-slate-500 mt-1">运行中</div>
+                  <div className={clsx("font-bold transition-colors", getEquipmentColor(getEquipmentStatus('annealing')))}>退火炉</div>
+                  <div className="text-xs text-slate-500 mt-1">{getEquipmentStatus('annealing')}</div>
                 </div>
                 <div className="bg-slate-800 rounded-lg p-3 text-center">
-                  <div className="text-emerald-400 font-bold">水压机</div>
-                  <div className="text-xs text-slate-500 mt-1">运行中</div>
+                  <div className={clsx("font-bold transition-colors", getEquipmentColor(getEquipmentStatus('hydrostatic')))}>水压机</div>
+                  <div className="text-xs text-slate-500 mt-1">{getEquipmentStatus('hydrostatic')}</div>
                 </div>
                 <div className="bg-slate-800 rounded-lg p-3 text-center">
-                  <div className="text-emerald-400 font-bold">喷锌线</div>
-                  <div className="text-xs text-slate-500 mt-1">运行中</div>
+                  <div className={clsx("font-bold transition-colors", getEquipmentColor(getEquipmentStatus('coating')))}>喷锌线</div>
+                  <div className="text-xs text-slate-500 mt-1">{getEquipmentStatus('coating')}</div>
                 </div>
                 <div className="bg-slate-800 rounded-lg p-3 text-center">
-                  <div className="text-amber-400 font-bold">打包机</div>
-                  <div className="text-xs text-slate-500 mt-1">维护中</div>
+                  <div className={clsx("font-bold transition-colors", getEquipmentColor(getEquipmentStatus('packaging')))}>打包机</div>
+                  <div className="text-xs text-slate-500 mt-1">{getEquipmentStatus('packaging')}</div>
                 </div>
              </div>
           </div>
@@ -198,8 +220,14 @@ export default function Dashboard() {
     );
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const todayProduction = productionRecords.filter(r => r.timestamp.startsWith(today) && (r.process === 'packaging' || !r.process)).reduce((acc, cur) => acc + cur.quantity, 0);
+  const todayProduction = productionRecords.filter(r => {
+    const recordDate = new Date(r.timestamp);
+    const today = new Date();
+    return recordDate.getDate() === today.getDate() && 
+           recordDate.getMonth() === today.getMonth() && 
+           recordDate.getFullYear() === today.getFullYear() &&
+           (r.process === 'packaging' || !r.process);
+  }).reduce((acc, cur) => acc + cur.quantity, 0);
 
   const stats = [
     { 

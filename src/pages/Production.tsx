@@ -420,7 +420,7 @@ const WorkshopView = ({
                         </button>
                     </div>
                 </div>
-                <div className="hidden md:flex w-full md:w-48 h-24 md:h-auto flex-shrink-0 flex-col order-2 md:order-2">
+                <div className="flex w-full md:w-64 h-24 md:h-auto flex-shrink-0 flex-col order-2 md:order-2">
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}

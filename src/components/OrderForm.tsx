@@ -167,7 +167,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-6 overflow-y-auto transition-all duration-300">
-      <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col h-full sm:h-auto sm:max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="px-4 py-3 sm:px-8 sm:py-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-none sm:rounded-t-2xl sticky top-0 z-10 safe-area-top">
@@ -197,8 +197,8 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50">
-          <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-20 sm:pb-0">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50 scrollbar-thin scrollbar-thumb-slate-200">
+          <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-32 sm:pb-0">
             
             {/* Section: Basic Info */}
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -432,7 +432,10 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
         </form>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-slate-100 bg-white rounded-b-2xl flex justify-end gap-4 sticky bottom-0 z-10">
+        <div 
+          className="px-8 py-5 border-t border-slate-100 bg-white rounded-b-2xl flex justify-end gap-4 sticky bottom-0 z-10"
+          style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
+        >
           <button
             onClick={onClose}
             className="px-6 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
