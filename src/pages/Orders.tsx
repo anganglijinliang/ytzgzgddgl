@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 import { Order } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import EmptyState from '@/components/EmptyState';
 import { 
   Plus, 
   Search, 
@@ -285,7 +286,7 @@ export default function Orders() {
   };
 
   if (isLoading && orders.length === 0) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner fullScreen />;
   }
 
   return (
@@ -368,11 +369,21 @@ export default function Orders() {
             <tbody className="divide-y divide-slate-100">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <Package className="h-12 w-12 text-slate-200" />
-                      <p>暂无订单数据</p>
-                    </div>
+                  <td colSpan={6}>
+                    <EmptyState 
+                      title="暂无订单数据" 
+                      description={searchTerm ? "未找到匹配的订单，请尝试其他关键词" : "当前没有订单，请点击上方按钮新建订单"}
+                      action={
+                        !searchTerm && canEdit ? (
+                          <button
+                            onClick={() => { setEditingOrder(undefined); setIsFormOpen(true); }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          >
+                            新建订单
+                          </button>
+                        ) : null
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
@@ -646,23 +657,45 @@ export default function Orders() {
         />
       )}
 
+      {/* QR Code Modal - Unified Style */}
       {showQRCode && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowQRCode(null)}>
-          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all scale-100" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">订单二维码</h3>
-            <p className="text-slate-500 text-sm mb-6">扫描二维码查看订单详情</p>
-            <div className="flex justify-center bg-white p-4 rounded-xl border border-slate-100 shadow-inner mb-6">
-              <QRCodeCanvas value={showQRCode} size={200} level="H" />
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setShowQRCode(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 text-center space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-900">工单二维码</h3>
+                <p className="text-sm text-slate-500">请使用手持终端扫描下方二维码</p>
+              </div>
+              
+              <div className="flex justify-center p-4 bg-white rounded-xl border-2 border-slate-100 shadow-inner">
+                <QRCodeCanvas 
+                  value={showQRCode} 
+                  size={200}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+
+              <div className="space-y-2 bg-slate-50 p-3 rounded-lg text-sm text-slate-600">
+                <div className="flex justify-between">
+                  <span>工单号:</span>
+                  <span className="font-mono font-medium">{showQRCode}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowQRCode(null)}
+                className="w-full py-3 bg-slate-900 text-white rounded-xl font-medium active:scale-[0.98] transition-all hover:bg-slate-800"
+              >
+                关闭
+              </button>
             </div>
-            <div className="text-xs text-slate-400 mb-6 font-mono break-all px-4">
-              ID: {showQRCode}
-            </div>
-            <button 
-              onClick={() => setShowQRCode(null)}
-              className="w-full py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-medium transition-colors"
-            >
-              关闭
-            </button>
           </div>
         </div>
       )}

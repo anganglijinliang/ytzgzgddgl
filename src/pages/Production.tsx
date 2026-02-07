@@ -3,10 +3,11 @@ import { useStore } from '@/store/useStore';
 import { Order, ProductionPlan, SubOrder, ProductionProcess } from '@/types';
 import { 
   Search, CheckCircle2, ListTodo, Settings, X, Calendar, 
-  Factory, ClipboardList, ArrowRight, Package
+  Factory, ClipboardList, ArrowRight, Package, ShieldCheck
 } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import EmptyState from '@/components/EmptyState';
 import { useToast } from '@/context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -45,6 +46,12 @@ const WorkshopView = ({
   const [recordDate, setRecordDate] = useState<string>(localStorage.getItem('prod_date') || new Date().toISOString().split('T')[0]);
   const [heatNo] = useState<string>('');
   const [process, setProcess] = useState<string>(localStorage.getItem('prod_process') || 'pulling');
+  
+  // Quality Params State
+  const [pressure, setPressure] = useState<string>('');
+  const [pressureTime, setPressureTime] = useState<string>('');
+  const [zincWeight, setZincWeight] = useState<string>('');
+  const [liningThickness, setLiningThickness] = useState<string>('');
   
   const [showSettings, setShowSettings] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -108,13 +115,22 @@ const WorkshopView = ({
       heatNo,
       process: process as any,
       operatorId: currentUser?.id || 'unknown',
-      timestamp: recordTimestamp
+      timestamp: recordTimestamp,
+      // Quality Params
+      pressure: pressure ? Number(pressure) : undefined,
+      pressureTime: pressureTime ? Number(pressureTime) : undefined,
+      zincWeight: zincWeight ? Number(zincWeight) : undefined,
+      liningThickness: liningThickness ? Number(liningThickness) : undefined,
     });
 
     if (success) {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 1500);
       setQuantity(0);
+      setPressure('');
+      setPressureTime('');
+      setZincWeight('');
+      setLiningThickness('');
       if (selectedPlanId) {
         await updatePlan(selectedPlanId, { status: 'completed' });
         setSelectedPlanId('');
@@ -189,11 +205,11 @@ const WorkshopView = ({
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
                 {availablePlans.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                        <Package size={48} className="mb-4 text-slate-200" />
-                        <p className="font-medium">暂无生产任务</p>
-                        <p className="text-sm mt-1">请等待调度下发</p>
-                    </div>
+                    <EmptyState 
+                        title="暂无生产任务" 
+                        description="请等待调度下发" 
+                        className="h-64"
+                    />
                 ) : (
                     availablePlans.map((plan: ProductionPlan) => {
                         const order = orders.find((o: Order) => o.id === plan.orderId);
@@ -261,7 +277,7 @@ const WorkshopView = ({
 
             <div className="flex-1 p-4 md:p-8 pb-32 md:pb-8 flex flex-col overflow-y-auto max-w-5xl mx-auto w-full">
             {/* Info Card - Industrial Design */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex-shrink-0">
                 {selectedOrder && selectedSubOrder ? (
                     <div className="flex flex-col md:flex-row">
                         <div className="flex-1 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-100">
@@ -309,9 +325,70 @@ const WorkshopView = ({
                 )}
             </div>
 
+            {/* Quality Parameter Inputs */}
+            {selectedOrder && selectedSubOrder && (process === 'hydrostatic' || process === 'coating' || process === 'lining') && (
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                 <div className="col-span-2 text-sm font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center gap-2">
+                   <ShieldCheck size={16} />
+                   质量参数 (Quality Data)
+                 </div>
+                 
+                 {process === 'hydrostatic' && (
+                   <>
+                     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
+                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">稳压压力 (MPa)</label>
+                        <input 
+                          type="number" 
+                          value={pressure}
+                          onChange={e => setPressure(e.target.value)}
+                          placeholder="0.0"
+                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                        />
+                     </div>
+                     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
+                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">稳压时间 (s)</label>
+                        <input 
+                          type="number" 
+                          value={pressureTime}
+                          onChange={e => setPressureTime(e.target.value)}
+                          placeholder="0"
+                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                        />
+                     </div>
+                   </>
+                 )}
+
+                 {process === 'coating' && (
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
+                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">锌层重量 (g/m²)</label>
+                        <input 
+                          type="number" 
+                          value={zincWeight}
+                          onChange={e => setZincWeight(e.target.value)}
+                          placeholder="0.0"
+                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                        />
+                     </div>
+                 )}
+
+                 {process === 'lining' && (
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
+                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">内衬厚度 (mm)</label>
+                        <input 
+                          type="number" 
+                          value={liningThickness}
+                          onChange={e => setLiningThickness(e.target.value)}
+                          placeholder="0.0"
+                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                        />
+                     </div>
+                 )}
+              </div>
+            )}
+
             {/* Numpad Area */}
             <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 min-h-[350px] md:min-h-[400px]">
-                <div className="flex-1 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6 order-1 md:order-1">
+                <div className="flex-1 bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6 order-1 md:order-1">
                      {/* Modern NumPad */}
                      <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
@@ -347,7 +424,7 @@ const WorkshopView = ({
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}
-                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl md:text-2xl font-bold rounded-3xl shadow-xl shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-row md:flex-col items-center justify-center gap-4 group"
+                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl md:text-2xl font-bold rounded-2xl shadow-xl shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-row md:flex-col items-center justify-center gap-4 group"
                     >
                         <div className="p-2 md:p-3 bg-blue-500 rounded-full group-hover:scale-110 transition-transform">
                             <CheckCircle2 size={32} className="md:w-12 md:h-12" />
@@ -363,7 +440,7 @@ const WorkshopView = ({
       {/* Settings Modal (Enhanced) */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                    <h3 className="text-xl font-bold text-slate-800">终端设置</h3>
                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X className="text-slate-500" /></button>
@@ -497,13 +574,13 @@ const WorkshopView = ({
         {showSuccess && (
             <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
             >
                 <motion.div 
                     initial={{ scale: 0.8, opacity: 0, y: 20 }} 
                     animate={{ scale: 1, opacity: 1, y: 0 }} 
                     exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                    className="bg-white rounded-[2rem] p-12 flex flex-col items-center shadow-2xl max-w-sm w-full mx-4"
+                    className="bg-white rounded-2xl p-12 flex flex-col items-center shadow-2xl max-w-sm w-full mx-4"
                 >
                     <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-6 shadow-inner">
                         <CheckCircle2 size={56} strokeWidth={3} />
@@ -602,7 +679,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-200px)] relative">
                 {/* Left: Order Pool */}
                 <div className={clsx(
-                    "md:col-span-4 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col absolute inset-0 z-10 md:static",
+                    "md:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col absolute inset-0 z-10 md:static",
                     selectedOrder ? "hidden md:flex" : "flex"
                 )}>
                     <div className="p-5 border-b border-slate-100 bg-slate-50/50">
@@ -616,7 +693,14 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                         </div>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {pendingOrders.map((order: Order) => (
+                        {pendingOrders.length === 0 ? (
+                            <EmptyState 
+                                title="暂无待排产订单" 
+                                description="当前没有处于待排产状态的订单" 
+                                className="h-48"
+                            />
+                        ) : (
+                            pendingOrders.map((order: Order) => (
                             <div 
                                 key={order.id}
                                 onClick={() => { setSelectedOrder(order); setSelectedItem(null); }}
@@ -670,7 +754,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                     )}
                                 </div>
                             </div>
-                        ))}
+                        )))}
                     </div>
                 </div>
 
@@ -691,7 +775,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                             </button>
 
                             {/* Order Items Selection */}
-                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex-1 overflow-hidden flex flex-col">
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex-1 overflow-hidden flex flex-col">
                                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <Package className="text-blue-600" />
                                     订单明细
@@ -771,7 +855,7 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 20 }}
-                                        className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 border-l-4 border-l-blue-600"
+                                        className="bg-white rounded-2xl border border-slate-200 shadow-xl p-6 border-l-4 border-l-blue-600"
                                     >
                                         <div className="flex justify-between items-start mb-6">
                                             <div>
@@ -881,9 +965,12 @@ const DispatcherView = ({ orders, plans, addPlan, masterData }: any) => {
                             </AnimatePresence>
                         </>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-white rounded-3xl border border-dashed border-slate-200">
-                            <ClipboardList size={64} className="mb-4 text-slate-200" />
-                            <p className="text-lg font-medium">请从左侧选择一个订单开始派工</p>
+                        <div className="flex-1 flex items-center justify-center bg-white rounded-2xl border border-dashed border-slate-200">
+                            <EmptyState 
+                                title="准备开始派工" 
+                                description="请从左侧列表选择一个订单，查看明细并创建生产计划"
+                                icon={ClipboardList}
+                            />
                         </div>
                     )}
                 </div>

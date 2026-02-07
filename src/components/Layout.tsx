@@ -164,7 +164,7 @@ export default function Layout() {
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 pb-8" 
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 pb-8" 
             onClick={e => e.stopPropagation()}
           >
              <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>

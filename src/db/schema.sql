@@ -84,53 +84,8 @@ CREATE TABLE IF NOT EXISTS production_plans (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-/*
--- Shipping Records Table (Removed)
-CREATE TABLE IF NOT EXISTS shipping_records (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES orders(id),
-    sub_order_id UUID REFERENCES sub_orders(id),
-    quantity INTEGER NOT NULL,
-    transport_type TEXT NOT NULL,
-    shipping_type TEXT NOT NULL,
-    shipping_warehouse TEXT,
-    vehicle_info TEXT,
-    shipping_no TEXT,
-    destination TEXT,
-    operator_id TEXT NOT NULL,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-*/
-
--- Initial Data Seeding (Optional: only if empty)
-INSERT INTO users (username, name, role) 
-VALUES 
-    ('admin', '系统管理员', 'admin'),
-    ('entry', '订单录入员', 'order_entry'),
-    ('prod', '生产主管', 'production')
-ON CONFLICT (username) DO NOTHING;
-
-INSERT INTO master_data (key, value)
-VALUES 
-    ('specs', '["DN40", "DN50", "DN60", "DN65", "DN80", "DN100", "DN125", "DN150", "DN200", "DN250", "DN300", "DN350", "DN400", "DN450", "DN500", "DN600", "DN700", "DN800", "DN900", "DN1000", "DN1100", "DN1200", "DN1400", "DN1500", "DN1600", "DN1800", "DN2000", "DN2200", "DN2400", "DN2600"]'::jsonb),
-    ('levels', '["K12", "K11", "K10", "K9", "K8", "K7", "C100", "C64", "C50", "C40", "C30", "C25", "C20"]'::jsonb),
-    ('interfaces', '["T型", "K型", "S型", "法兰"]'::jsonb),
-    ('linings', '["水泥砂浆", "环氧陶瓷", "聚氨酯"]'::jsonb),
-    ('lengths', '["6米", "5.7米", "8米"]'::jsonb),
-    ('coatings', '["沥青漆", "环氧树脂", "锌层+沥青"]'::jsonb),
-    ('warehouses', '["成品库A", "成品库B", "待发区"]'::jsonb)
-ON CONFLICT (key) DO NOTHING;
-
--- Migrations
-DO $$
-BEGIN
-    -- Production Records Migration (Add process)
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='production_records' AND column_name='process') THEN
-        ALTER TABLE production_records ADD COLUMN process TEXT DEFAULT 'packaging';
-    END IF;
-
-    -- Users Migration (Add password_hash)
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN
-        ALTER TABLE users ADD COLUMN password_hash TEXT;
-    END IF;
-END $$;
+-- Migrations (Idempotent)
+ALTER TABLE production_records ADD COLUMN IF NOT EXISTS pressure NUMERIC;
+ALTER TABLE production_records ADD COLUMN IF NOT EXISTS pressure_time INTEGER;
+ALTER TABLE production_records ADD COLUMN IF NOT EXISTS zinc_weight NUMERIC;
+ALTER TABLE production_records ADD COLUMN IF NOT EXISTS lining_thickness NUMERIC;

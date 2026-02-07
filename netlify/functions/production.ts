@@ -25,7 +25,12 @@ export const handler = async (event, context) => {
           operatorId: row.operator_id,
           process: row.process,
           heatNo: row.heat_no,
-          timestamp: row.timestamp
+          timestamp: row.timestamp,
+          // Quality Params
+          pressure: row.pressure,
+          pressureTime: row.pressure_time,
+          zincWeight: row.zinc_weight,
+          liningThickness: row.lining_thickness
         }));
 
         return {
@@ -43,8 +48,9 @@ export const handler = async (event, context) => {
         // Insert Record
         const result = await client.query(`
           INSERT INTO production_records (
-            order_id, sub_order_id, team, shift, quantity, workshop, warehouse, operator_id, heat_no, process
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            order_id, sub_order_id, team, shift, quantity, workshop, warehouse, operator_id, heat_no, process,
+            pressure, pressure_time, zinc_weight, lining_thickness
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
           RETURNING id
         `, [
           data.orderId,
@@ -56,7 +62,11 @@ export const handler = async (event, context) => {
           data.warehouse,
           data.operatorId,
           data.heatNo,
-          process
+          process,
+          data.pressure,
+          data.pressureTime,
+          data.zincWeight,
+          data.liningThickness
         ]);
 
         // Determine which column to update in sub_orders

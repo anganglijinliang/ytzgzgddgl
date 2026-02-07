@@ -21,7 +21,7 @@ export interface MasterData {
   workshops: string[]; // 产线/车间
 }
 
-export type ProductionProcess = 'pulling' | 'hydrostatic' | 'lining' | 'packaging';
+export type ProductionProcess = 'pulling' | 'hydrostatic' | 'lining' | 'coating' | 'packaging';
 
 export type OrderStatus = 'new' | 'in_production' | 'production_completed';
 
@@ -95,5 +95,11 @@ export interface ProductionRecord {
   timestamp: string;
   heatNo?: string; // 炉号
   process?: ProductionProcess; // 工序
+  
+  // Quality Parameters (Quality 4.0 Lite)
+  pressure?: number; // MPa (Hydrostatic)
+  pressureTime?: number; // seconds (Hydrostatic)
+  zincWeight?: number; // g/m2 (Coating/Zinc)
+  liningThickness?: number; // mm (Lining)
 }
 

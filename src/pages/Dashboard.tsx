@@ -12,17 +12,30 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
-import { FileText, Factory, Activity, Layers, Database, TrendingUp, CheckCircle2, RefreshCw } from 'lucide-react';
+import { FileText, Factory, Activity, Layers, Database, TrendingUp, CheckCircle2, RefreshCw, MonitorPlay, Minimize2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useToast } from '@/context/ToastContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
-  const { orders, productionRecords, isLoading } = useStore();
+  const { orders, productionRecords, isLoading, fetchInitialData } = useStore();
   const { showToast } = useToast();
   const [isInitDbLoading, setIsInitDbLoading] = useState(false);
+  const [isKanbanMode, setIsKanbanMode] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Kanban Clock & Auto-refresh
+  useEffect(() => {
+    if (!isKanbanMode) return;
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const refreshTimer = setInterval(() => fetchInitialData(), 30000); // Refresh data every 30s
+    return () => {
+      clearInterval(timer);
+      clearInterval(refreshTimer);
+    };
+  }, [isKanbanMode, fetchInitialData]);
 
   const handleInitDb = async () => {
     if (!confirm('确定要初始化数据库吗？这将创建所需的表结构（如果不存在）。')) return;
@@ -41,7 +54,148 @@ export default function Dashboard() {
   };
 
   if (isLoading && orders.length === 0) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner fullScreen />;
+  }
+
+  // Kanban View Component
+  if (isKanbanMode) {
+    return (
+      <div className="fixed inset-0 z-[99999] bg-slate-950 text-white overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="h-20 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-8 shadow-2xl">
+          <div className="flex items-center gap-4">
+            <Factory className="h-10 w-10 text-blue-500" />
+            <div>
+              <h1 className="text-3xl font-bold tracking-wider text-blue-100">永通铸管 · 智慧工厂实时看板</h1>
+              <p className="text-slate-400 text-sm">YONGTONG DUCTILE IRON PIPE SMART FACTORY</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-8">
+            <div className="text-right">
+              <div className="text-3xl font-mono font-bold text-emerald-400">
+                {currentTime.toLocaleTimeString()}
+              </div>
+              <div className="text-slate-400 text-sm">{currentTime.toLocaleDateString()}</div>
+            </div>
+            <button 
+              onClick={() => setIsKanbanMode(false)}
+              className="p-2 hover:bg-slate-800 rounded-full transition-colors"
+            >
+              <Minimize2 className="h-8 w-8 text-slate-500 hover:text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div className="flex-1 p-6 grid grid-cols-4 grid-rows-2 gap-6">
+          {/* KPI Cards */}
+          <div className="col-span-1 bg-slate-900/50 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50" />
+            <div className="relative z-10">
+              <h3 className="text-slate-400 text-lg uppercase tracking-widest">今日产量</h3>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-7xl font-bold text-blue-400 font-mono">
+                  {productionRecords.filter(r => r.timestamp.startsWith(new Date().toISOString().split('T')[0])).reduce((acc, cur) => acc + cur.quantity, 0)}
+                </span>
+                <span className="text-xl text-slate-500">支</span>
+              </div>
+            </div>
+            <div className="relative z-10 text-blue-300 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              <span>生产正常进行中</span>
+            </div>
+          </div>
+
+          <div className="col-span-1 bg-slate-900/50 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-50" />
+            <div className="relative z-10">
+              <h3 className="text-slate-400 text-lg uppercase tracking-widest">在产订单</h3>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-7xl font-bold text-emerald-400 font-mono">
+                  {orders.filter(o => o.status === 'in_production').length}
+                </span>
+                <span className="text-xl text-slate-500">批</span>
+              </div>
+            </div>
+            <div className="relative z-10 text-emerald-300 flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              <span>车间负荷: 85%</span>
+            </div>
+          </div>
+
+          {/* Central Status Area */}
+          <div className="col-span-2 row-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col">
+            <h3 className="text-slate-400 text-lg uppercase tracking-widest mb-6 flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 animate-spin" /> 实时生产动态
+            </h3>
+            <div className="flex-1 overflow-hidden relative">
+              <div className="absolute inset-0 overflow-y-auto space-y-4 no-scrollbar">
+                {productionRecords.slice(0, 10).map((record, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    key={record.id}
+                    className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border-l-4 border-blue-500"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-slate-500 font-mono">
+                        {new Date(record.timestamp).toLocaleTimeString()}
+                      </span>
+                      <span className="text-lg font-bold text-white">
+                        {orders.find(o => o.id === record.orderId)?.customerName || '未知客户'}
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm">
+                        {record.process}
+                      </span>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-400 font-mono">
+                      +{record.quantity}
+                    </div>
+                  </motion.div>
+                ))}
+                {productionRecords.length === 0 && (
+                  <div className="text-center text-slate-600 mt-20">暂无今日生产记录</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Cards */}
+          <div className="col-span-1 bg-slate-900/50 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+             <h3 className="text-slate-400 text-lg uppercase tracking-widest">待排产</h3>
+             <div className="text-5xl font-bold text-amber-400 font-mono mt-2">
+                {orders.filter(o => o.status === 'new').length}
+             </div>
+             <div className="mt-4 h-2 bg-slate-800 rounded-full overflow-hidden">
+               <div className="h-full bg-amber-400 w-3/4" />
+             </div>
+          </div>
+
+          <div className="col-span-1 bg-slate-900/50 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+             <h3 className="text-slate-400 text-lg uppercase tracking-widest">设备状态</h3>
+             <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="text-emerald-400 font-bold">退火炉</div>
+                  <div className="text-xs text-slate-500 mt-1">运行中</div>
+                </div>
+                <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="text-emerald-400 font-bold">水压机</div>
+                  <div className="text-xs text-slate-500 mt-1">运行中</div>
+                </div>
+                <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="text-emerald-400 font-bold">喷锌线</div>
+                  <div className="text-xs text-slate-500 mt-1">运行中</div>
+                </div>
+                <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="text-amber-400 font-bold">打包机</div>
+                  <div className="text-xs text-slate-500 mt-1">维护中</div>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const today = new Date().toISOString().split('T')[0];
@@ -152,8 +306,17 @@ export default function Dashboard() {
           <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">仪表盘</h1>
           <p className="text-slate-500 mt-2 font-medium">实时监控生产状态与订单进度</p>
         </div>
-        <div className="text-sm text-slate-400 font-medium">
-          最后更新: {new Date().toLocaleTimeString()}
+        <div className="flex flex-col md:flex-row items-end gap-4">
+          <button
+            onClick={() => setIsKanbanMode(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
+          >
+            <MonitorPlay className="w-4 h-4" />
+            <span className="font-bold">开启车间看板</span>
+          </button>
+          <div className="text-sm text-slate-400 font-medium">
+            最后更新: {new Date().toLocaleTimeString()}
+          </div>
         </div>
       </motion.div>
 
@@ -194,7 +357,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100"
+          className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-slate-100"
         >
           <div className="flex justify-between items-center mb-8">
              <div>
@@ -231,7 +394,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col"
+          className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col"
         >
            <div className="mb-8">
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -265,7 +428,7 @@ export default function Dashboard() {
          transition={{ delay: 0.6 }}
          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
       >
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 lg:col-span-1">
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 lg:col-span-1">
               <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <Database className="text-indigo-500" />
                 订单状态分布
@@ -293,7 +456,7 @@ export default function Dashboard() {
               </div>
           </div>
           
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col justify-center items-center text-center space-y-4 relative overflow-hidden">
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col justify-center items-center text-center space-y-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white opacity-50"></div>
               <div className="relative z-10 p-6 max-w-lg">
                 <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">

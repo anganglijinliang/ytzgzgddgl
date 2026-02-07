@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 import { FileDown, Printer, Search, Loader2, Calendar, BarChart3, TrendingUp, ChevronDown } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import EmptyState from '@/components/EmptyState';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -408,11 +409,12 @@ export default function Reports() {
                     ))}
                     {filteredData.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-slate-400 bg-slate-50/50">
-                          <div className="flex flex-col items-center justify-center">
-                            <Search className="h-10 w-10 mb-2 opacity-50" />
-                            <p>没有找到匹配的数据</p>
-                          </div>
+                        <td colSpan={7}>
+                           <EmptyState 
+                             title="暂无报表数据"
+                             description="没有找到匹配的订单数据"
+                             icon={Search}
+                           />
                         </td>
                       </tr>
                     )}
@@ -468,12 +470,12 @@ export default function Reports() {
                   </div>
                 ))}
                 {filteredData.length === 0 && (
-                  <div className="p-8 text-center text-slate-400 bg-slate-50/50">
-                    <div className="flex flex-col items-center justify-center">
-                      <Search className="h-10 w-10 mb-2 opacity-50" />
-                      <p>没有找到匹配的数据</p>
-                    </div>
-                  </div>
+                  <EmptyState 
+                    title="暂无报表数据"
+                    description="没有找到匹配的数据"
+                    icon={Search}
+                    className="bg-slate-50/50 py-8"
+                  />
                 )}
               </div>
             </div>

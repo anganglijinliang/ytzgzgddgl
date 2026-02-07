@@ -3,6 +3,7 @@ import { useStore } from '@/store/useStore';
 import { User, UserRole } from '@/types';
 import { Plus, Edit2, Trash2, X, Check, Search, Loader2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import EmptyState from '@/components/EmptyState';
 import { useToast } from '@/context/ToastContext';
 import { clsx } from 'clsx';
 
@@ -135,7 +136,7 @@ export default function Users() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-200">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -161,8 +162,18 @@ export default function Users() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={4}>
+                    <EmptyState 
+                      title="没有找到用户"
+                      description={searchTerm ? "未找到匹配的用户，请尝试其他关键词" : "暂无用户数据"}
+                    />
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
@@ -202,14 +213,7 @@ export default function Users() {
                     </div>
                   </td>
                 </tr>
-              ))}
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                    没有找到匹配的用户
-                  </td>
-                </tr>
-              )}
+              )))}
             </tbody>
           </table>
         </div>
@@ -256,9 +260,11 @@ export default function Users() {
             </div>
           ))}
           {filteredUsers.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
-              没有找到匹配的用户
-            </div>
+            <EmptyState 
+              title="没有找到用户"
+              description="没有找到匹配的用户"
+              className="py-12"
+            />
           )}
         </div>
       </div>
