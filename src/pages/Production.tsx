@@ -143,18 +143,18 @@ const WorkshopView = ({
   };
 
   return (
-    <div className="h-full md:h-[calc(100vh-64px)] bg-slate-100 flex flex-col overflow-hidden font-sans relative">
+    <div className="fixed inset-0 z-[10000] bg-slate-100 flex flex-col overflow-hidden font-sans safe-area-top">
       {/* Top Bar - Industrial Style */}
-      <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md z-20 shrink-0">
-        <div className="flex items-center gap-6">
-            <div className="p-2.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-900/50">
-                <Factory size={28} className="text-white" />
+      <div className="bg-slate-900 text-white px-4 py-3 md:px-6 md:py-4 flex justify-between items-center shadow-md z-20 shrink-0">
+        <div className="flex items-center gap-4 md:gap-6">
+            <div className="p-2 md:p-2.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-900/50">
+                <Factory size={20} className="text-white md:w-7 md:h-7" />
             </div>
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-100">智能车间终端</h1>
-                <div className="flex items-center gap-3 text-sm text-slate-400 mt-0.5">
+                <h1 className="text-lg md:text-2xl font-bold tracking-tight text-slate-100">智能车间终端</h1>
+                <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-slate-400 mt-0.5">
                     <span className="font-medium text-slate-300">{workshop}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                    <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-slate-600" />
                     <span className="text-blue-400 font-bold">{PROCESS_MAP[process] || process}</span>
                 </div>
             </div>
@@ -452,33 +452,22 @@ const WorkshopView = ({
                 </div>
                 
                 {/* Desktop Confirm Button (Hidden on Mobile) */}
-                <div className="hidden md:flex w-56 h-auto flex-shrink-0 flex-col order-2">
+                <div className="hidden md:flex w-64 flex-shrink-0 flex-col order-2 pl-2 py-1">
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}
-                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-2xl font-bold rounded-2xl shadow-lg shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-col items-center justify-center gap-4 group"
+                        className="flex-1 w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-2xl font-bold rounded-2xl shadow-lg shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-col items-center justify-center gap-4 group"
                     >
                         <div className="p-4 bg-white/20 rounded-full group-hover:scale-110 transition-transform backdrop-blur-sm">
-                            <CheckCircle2 size={40} className="text-white" />
+                            <CheckCircle2 size={48} className="text-white" />
                         </div>
-                        <span>确认提交</span>
-                        {quantity > 0 && <span className="text-lg opacity-80 font-mono">({quantity})</span>}
+                        <span className="tracking-widest">确认提交</span>
+                        {quantity > 0 && <span className="text-xl opacity-90 font-mono bg-blue-700/30 px-3 py-1 rounded-lg">x{quantity}</span>}
                     </button>
                 </div>
             </div>
             
-            {/* Mobile Fixed Bottom Action Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-[100] safe-area-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.1)] backdrop-blur-md bg-white/90">
-                <button 
-                    onClick={handleSubmit}
-                    disabled={!selectedOrder || quantity <= 0}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xl font-bold rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-3"
-                >
-                    <CheckCircle2 size={24} />
-                    <span>确认提交</span>
-                    {quantity > 0 && <span className="font-mono bg-blue-500 px-2 py-0.5 rounded text-sm">x{quantity}</span>}
-                </button>
-            </div>
+            {/* Mobile Fixed Bottom Action Bar - REMOVED DUPLICATE */}
         </div>
       </div>
       </div>
@@ -603,14 +592,15 @@ const WorkshopView = ({
 
       {/* Mobile Fixed Submit Button */}
        {selectedPlanId && (
-       <div className="md:hidden fixed bottom-[80px] left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-slate-200 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+       <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-slate-200 z-[100] safe-area-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
            <button 
                onClick={handleSubmit}
                disabled={!selectedOrder || quantity <= 0}
-               className="w-full h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl font-bold rounded-full shadow-lg shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-transform"
+               className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl font-bold rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-transform"
            >
                <CheckCircle2 size={24} />
-               <span>确认提交 ({quantity})</span>
+               <span>确认提交</span>
+               {quantity > 0 && <span className="font-mono bg-blue-500 px-2 py-0.5 rounded text-sm">x{quantity}</span>}
            </button>
        </div>
        )}

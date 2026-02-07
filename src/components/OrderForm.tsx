@@ -166,8 +166,8 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 sm:p-6 transition-all duration-300">
-      <div className="bg-white fixed inset-0 sm:static sm:rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col h-full sm:h-auto sm:max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[10000] sm:p-6 transition-all duration-300">
+      <div className="bg-white fixed inset-0 sm:static sm:rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="px-4 py-3 sm:px-8 sm:py-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-none sm:rounded-t-2xl sticky top-0 z-10 safe-area-top">
@@ -433,7 +433,7 @@ export default function OrderForm({ initialData, onClose, onSubmit }: OrderFormP
 
         {/* Footer */}
         <div 
-          className="px-8 py-5 border-t border-slate-100 bg-white sm:rounded-b-2xl flex justify-end gap-4 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+          className="px-8 py-5 border-t border-slate-100 bg-white sm:rounded-b-2xl flex justify-end gap-4 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
           style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
         >
           <button
