@@ -277,35 +277,44 @@ const WorkshopView = ({
 
             <div className="flex-1 p-4 md:p-8 pb-32 md:pb-8 flex flex-col overflow-y-auto max-w-5xl mx-auto w-full">
             {/* Info Card - Industrial Design */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-4 md:mb-6 flex-shrink-0">
                 {selectedOrder && selectedSubOrder ? (
                     <div className="flex flex-col md:flex-row">
-                        <div className="flex-1 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-100">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-md uppercase tracking-wider">生产中</span>
-                                <span className="text-slate-400 text-sm font-medium">订单编号</span>
+                        <div className="flex-1 p-4 md:p-8 border-b md:border-b-0 md:border-r border-slate-100">
+                            <div className="flex items-center justify-between md:justify-start gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-md uppercase tracking-wider">生产中</span>
+                                    <span className="text-slate-400 text-sm font-medium">订单信息</span>
+                                </div>
+                                {/* Mobile Order No */}
+                                <div className="md:hidden font-black text-slate-900 text-xl">{selectedOrder.orderNo}</div>
                             </div>
-                            <div className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">{selectedOrder.orderNo}</div>
-                            <div className="grid grid-cols-2 gap-4">
+                            
+                            {/* Desktop Order No */}
+                            <div className="hidden md:block text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">{selectedOrder.orderNo}</div>
+                            
+                            <div className="grid grid-cols-2 gap-3 md:gap-4 mt-2 md:mt-0">
                                 {(() => {
                                     const item = selectedOrder.items.find(i => i.id === selectedSubOrder);
                                     if (!item) return null;
                                     return (
                                         <>
-                                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <div className="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100">
                                                 <div className="text-xs text-slate-500 mb-1">规格型号</div>
-                                                <div className="font-bold text-slate-700">{item.spec}</div>
+                                                <div className="font-bold text-slate-700 text-sm md:text-base">{item.spec}</div>
                                             </div>
-                                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <div className="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100">
                                                 <div className="text-xs text-slate-500 mb-1">等级/长度</div>
-                                                <div className="font-bold text-slate-700">{item.level} / {item.length}</div>
+                                                <div className="font-bold text-slate-700 text-sm md:text-base">{item.level} / {item.length}</div>
                                             </div>
                                         </>
                                     );
                                 })()}
                             </div>
                         </div>
-                        <div className="md:w-72 p-6 md:p-8 bg-slate-50/50 flex flex-col justify-center items-center md:items-end border-l border-slate-100">
+                        
+                        {/* Desktop Quantity Display (Hidden on Mobile) */}
+                        <div className="hidden md:flex md:w-72 p-6 md:p-8 bg-slate-50/50 flex-col justify-center items-end border-l border-slate-100">
                              <div className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wide">本次录入数量</div>
                              <div className={clsx(
                                  "text-7xl font-black font-mono tracking-tighter transition-all",
@@ -325,65 +334,85 @@ const WorkshopView = ({
                 )}
             </div>
 
-            {/* Quality Parameter Inputs */}
-            {selectedOrder && selectedSubOrder && (process === 'hydrostatic' || process === 'coating' || process === 'lining') && (
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                 <div className="col-span-2 text-sm font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center gap-2">
-                   <ShieldCheck size={16} />
-                   质量参数 (Quality Data)
-                 </div>
-                 
-                 {process === 'hydrostatic' && (
-                   <>
-                     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
-                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">稳压压力 (MPa)</label>
-                        <input 
-                          type="number" 
-                          value={pressure}
-                          onChange={e => setPressure(e.target.value)}
-                          placeholder="0.0"
-                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
-                        />
-                     </div>
-                     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
-                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">稳压时间 (s)</label>
-                        <input 
-                          type="number" 
-                          value={pressureTime}
-                          onChange={e => setPressureTime(e.target.value)}
-                          placeholder="0"
-                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
-                        />
-                     </div>
-                   </>
-                 )}
+            {/* Mobile Input Area (Quantity + Quality) */}
+            {selectedOrder && selectedSubOrder && (
+                <div className="space-y-4 mb-4 md:mb-6">
+                    {/* Mobile Quantity Input Box */}
+                    <div className="md:hidden bg-white p-4 rounded-2xl border-2 border-blue-500 shadow-sm flex flex-col relative focus-within:ring-4 ring-blue-100 transition-all">
+                        <label className="text-xs text-blue-500 font-bold uppercase mb-1 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            录入数量 (Quantity)
+                        </label>
+                        <div className={clsx(
+                            "text-4xl font-black font-mono tracking-tight text-right w-full bg-transparent outline-none py-1 border-b border-slate-100",
+                            quantity > 0 ? "text-slate-900" : "text-slate-300"
+                        )}>
+                            {quantity || 0}
+                        </div>
+                        <div className="absolute right-4 bottom-4 text-xs text-slate-400 font-medium">支</div>
+                    </div>
 
-                 {process === 'coating' && (
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
-                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">锌层重量 (g/m²)</label>
-                        <input 
-                          type="number" 
-                          value={zincWeight}
-                          onChange={e => setZincWeight(e.target.value)}
-                          placeholder="0.0"
-                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
-                        />
-                     </div>
-                 )}
-
-                 {process === 'lining' && (
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative group focus-within:ring-2 ring-blue-500 ring-offset-2 transition-all">
-                        <label className="text-xs text-slate-400 font-bold uppercase mb-1">内衬厚度 (mm)</label>
-                        <input 
-                          type="number" 
-                          value={liningThickness}
-                          onChange={e => setLiningThickness(e.target.value)}
-                          placeholder="0.0"
-                          className="text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
-                        />
-                     </div>
-                 )}
-              </div>
+                    {/* Quality Parameter Inputs */}
+                    {(process === 'hydrostatic' || process === 'coating' || process === 'lining') && (
+                        <div className="grid grid-cols-2 gap-3 md:gap-4">
+                             <div className="col-span-2 text-sm font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center gap-2 px-1">
+                               <ShieldCheck size={16} />
+                               质量参数
+                             </div>
+                             
+                             {process === 'hydrostatic' && (
+                               <>
+                                 <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col relative focus-within:border-blue-500 focus-within:ring-2 ring-blue-100 transition-all">
+                                    <label className="text-xs text-slate-400 font-bold uppercase mb-1">稳压压力 (MPa)</label>
+                                    <input 
+                                      type="number" 
+                                      value={pressure}
+                                      onChange={e => setPressure(e.target.value)}
+                                      placeholder="0.0"
+                                      className="text-xl md:text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                                    />
+                                 </div>
+                                 <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col relative focus-within:border-blue-500 focus-within:ring-2 ring-blue-100 transition-all">
+                                    <label className="text-xs text-slate-400 font-bold uppercase mb-1">稳压时间 (s)</label>
+                                    <input 
+                                      type="number" 
+                                      value={pressureTime}
+                                      onChange={e => setPressureTime(e.target.value)}
+                                      placeholder="0"
+                                      className="text-xl md:text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                                    />
+                                 </div>
+                               </>
+                             )}
+            
+                             {process === 'coating' && (
+                                <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col relative focus-within:border-blue-500 focus-within:ring-2 ring-blue-100 transition-all">
+                                    <label className="text-xs text-slate-400 font-bold uppercase mb-1">锌层重量 (g/m²)</label>
+                                    <input 
+                                      type="number" 
+                                      value={zincWeight}
+                                      onChange={e => setZincWeight(e.target.value)}
+                                      placeholder="0.0"
+                                      className="text-xl md:text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                                    />
+                                 </div>
+                             )}
+            
+                             {process === 'lining' && (
+                                <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col relative focus-within:border-blue-500 focus-within:ring-2 ring-blue-100 transition-all">
+                                    <label className="text-xs text-slate-400 font-bold uppercase mb-1">内衬厚度 (mm)</label>
+                                    <input 
+                                      type="number" 
+                                      value={liningThickness}
+                                      onChange={e => setLiningThickness(e.target.value)}
+                                      placeholder="0.0"
+                                      className="text-xl md:text-2xl font-bold text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-200"
+                                    />
+                                 </div>
+                             )}
+                          </div>
+                    )}
+                </div>
             )}
 
             {/* Numpad Area */}
