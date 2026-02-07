@@ -387,51 +387,68 @@ const WorkshopView = ({
             )}
 
             {/* Numpad Area */}
-            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 min-h-[350px] md:min-h-[400px]">
-                <div className="flex-1 bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 p-4 md:p-6 order-1 md:order-1">
+            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 min-h-[350px] md:min-h-[400px]">
+                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 order-1 md:order-1">
                      {/* Modern NumPad */}
                      <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                             <button
                                 key={num}
                                 onClick={() => handleNumInput(num)}
-                                className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-2xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
+                                className="bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 text-2xl md:text-4xl font-bold text-slate-700 rounded-xl transition-all flex items-center justify-center shadow-sm active:scale-95"
                             >
                                 {num}
                             </button>
                         ))}
                         <button 
                             onClick={handleClear} 
-                            className="bg-red-50 border-b-4 border-red-100 text-red-500 text-lg md:text-xl font-bold rounded-2xl hover:bg-red-100 hover:border-red-200 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+                            className="bg-red-50 border border-red-100 text-red-500 text-lg md:text-xl font-bold rounded-xl hover:bg-red-100 transition-all flex items-center justify-center active:scale-95"
                         >
                             清空
                         </button>
                         <button 
                             onClick={() => handleNumInput(0)} 
-                            className="bg-white border-b-4 border-slate-200 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 active:border-b-0 active:translate-y-1 text-2xl md:text-4xl font-bold text-slate-700 rounded-2xl transition-all flex items-center justify-center"
+                            className="bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 text-2xl md:text-4xl font-bold text-slate-700 rounded-xl transition-all flex items-center justify-center shadow-sm active:scale-95"
                         >
                             0
                         </button>
                         <button 
                             onClick={handleBackspace} 
-                            className="bg-slate-100 border-b-4 border-slate-200 hover:bg-slate-200 text-slate-600 text-lg md:text-xl font-bold rounded-2xl active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+                            className="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 text-lg md:text-xl font-bold rounded-xl transition-all flex items-center justify-center active:scale-95"
                         >
+                            <span className="sr-only">Backspace</span>
                             ⌫
                         </button>
                     </div>
                 </div>
-                <div className="flex w-full md:w-64 h-24 md:h-auto flex-shrink-0 flex-col order-2 md:order-2">
+                
+                {/* Desktop Confirm Button (Hidden on Mobile) */}
+                <div className="hidden md:flex w-56 h-auto flex-shrink-0 flex-col order-2">
                     <button 
                         onClick={handleSubmit}
                         disabled={!selectedOrder || quantity <= 0}
-                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xl md:text-2xl font-bold rounded-2xl shadow-xl shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-row md:flex-col items-center justify-center gap-4 group"
+                        className="h-full w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-2xl font-bold rounded-2xl shadow-lg shadow-blue-200 border-b-8 border-blue-800 hover:border-blue-700 active:border-b-0 active:translate-y-2 transition-all flex flex-col items-center justify-center gap-4 group"
                     >
-                        <div className="p-2 md:p-3 bg-blue-500 rounded-full group-hover:scale-110 transition-transform">
-                            <CheckCircle2 size={32} className="md:w-12 md:h-12" />
+                        <div className="p-4 bg-white/20 rounded-full group-hover:scale-110 transition-transform backdrop-blur-sm">
+                            <CheckCircle2 size={40} className="text-white" />
                         </div>
                         <span>确认提交</span>
+                        {quantity > 0 && <span className="text-lg opacity-80 font-mono">({quantity})</span>}
                     </button>
                 </div>
+            </div>
+            
+            {/* Mobile Fixed Bottom Action Bar */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-[100] safe-area-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.1)] backdrop-blur-md bg-white/90">
+                <button 
+                    onClick={handleSubmit}
+                    disabled={!selectedOrder || quantity <= 0}
+                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xl font-bold rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-3"
+                >
+                    <CheckCircle2 size={24} />
+                    <span>确认提交</span>
+                    {quantity > 0 && <span className="font-mono bg-blue-500 px-2 py-0.5 rounded text-sm">x{quantity}</span>}
+                </button>
             </div>
         </div>
       </div>
